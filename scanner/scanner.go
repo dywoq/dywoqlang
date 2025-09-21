@@ -126,14 +126,13 @@ func (s *Scanner) tokenizeType(r rune) (*token.Token, error) {
 
 	strType, err := s.slice(startPos, s.pos)
 	if err != nil {
-		s.pos, s.line, s.col = startPos, startLine, startCol
-		return nil, err
+		goto restore
 	}
 
 	switch strType {
 	case "int", "uint":
 		if !unicode.IsNumber(s.current()) {
-			return nil, errNoMatch
+			goto restore
 		}
 
 		numStart := s.pos
@@ -143,12 +142,12 @@ func (s *Scanner) tokenizeType(r rune) (*token.Token, error) {
 
 		numberPart, err := s.slice(numStart, s.pos)
 		if err != nil {
-			return nil, err
+			goto restore
 		}
 		result := strType + numberPart
 
 		if !token.Types.Is(result) {
-			return nil, fmt.Errorf("wrong type: %s", result)
+			goto restore
 		}
 		return token.New(result, token.KIND_TYPE, token.NewPosition(s.line, s.col, s.pos)), nil
 
@@ -156,8 +155,12 @@ func (s *Scanner) tokenizeType(r rune) (*token.Token, error) {
 		return token.New(strType, token.KIND_TYPE, token.NewPosition(s.line, s.col, s.pos)), nil
 
 	default:
-		return nil, errNoMatch
+		goto restore
 	}
+
+restore:
+	s.pos, s.line, s.col = startPos, startLine, startCol
+	return nil, err
 }
 
 func (s *Scanner) tokenizeString(r rune) (*token.Token, error) {
