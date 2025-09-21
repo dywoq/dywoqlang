@@ -1,6 +1,9 @@
 package token
 
-import "unicode"
+import (
+	"fmt"
+	"unicode"
+)
 
 // Kind is a alias of string.
 // Represents token kind.
@@ -32,6 +35,8 @@ const (
 	KIND_SEPARATOR        Kind = "separator"
 	KIND_TYPE             Kind = "type"
 	KIND_BOOL_CONSTANT    Kind = "bool_constant"
+	KIND_EOF              Kind = "eof"
+	KIND_ILLEGAL          Kind = "illegal"
 )
 
 var (
@@ -81,6 +86,14 @@ var (
 func (m Map) Is(value string) bool {
 	_, ok := m[value]
 	return ok
+}
+
+func (t Token) String() string {
+	pos := "<nil>"
+	if t.Position != nil {
+		pos = fmt.Sprintf("line: %d, col: %d, pos: %d", t.Position.Line, t.Position.Column, t.Position.Position)
+	}
+	return fmt.Sprintf("{literal: \"%s\", kind: %s, position: {%s}}", t.Literal, t.Kind, pos)
 }
 
 // New returns a new pointer to Token.
