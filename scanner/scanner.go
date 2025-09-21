@@ -48,10 +48,11 @@ func (s *Scanner) advance(i int) {
 		s.pos++
 		s.col++
 
-		if char == '\n' {
+		switch char {
+		case '\n':
 			s.col = 1
 			s.line++
-		} else if char == '\r' {
+		case '\r':
 			s.col = 1
 		}
 	}
