@@ -52,6 +52,7 @@ func (s *Scanner) setup() {
 	s.tokenizers = append(s.tokenizers, s.tokenizeKeyword)
 	s.tokenizers = append(s.tokenizers, s.tokenizeIdentifier)
 	s.tokenizers = append(s.tokenizers, s.tokenizeString)
+	s.tokenizers = append(s.tokenizers, s.tokenizeInteger)
 	s.tokenizers = append(s.tokenizers, s.tokenizeSeparator)
 	s.tokenizers = append(s.tokenizers, s.tokenizeType)
 }
@@ -238,6 +239,22 @@ func (s *Scanner) tokenizeIdentifier(r rune) (*token.Token, error) {
 	return nil, errNoMatch
 }
 
+func (s *Scanner) tokenizeInteger(r rune) (*token.Token, error) {
+	if !unicode.IsNumber(r) {
+		return nil, errNoMatch
+	}
+	startPos := s.pos
+	s.advance(1)
+	for unicode.IsNumber(s.current()) {
+		s.advance(1)
+	}
+	str, err := s.slice(startPos, s.pos)
+	if err != nil {
+		return nil, err
+	}
+	return token.New(str, token.KIND_INTEGER, token.NewPosition(s.pos, s.col, s.pos)), nil
+}
+
 func (s *Scanner) skipWhitespace() {
 	if unicode.IsSpace(s.current()) {
 		s.advance(1)
@@ -245,33 +262,33 @@ func (s *Scanner) skipWhitespace() {
 }
 
 func (s *Scanner) Scan() ([]*token.Token, error) {
-s.reset()
-    if !s.setupOn {
-        s.setup()
-    }
-    result := []*token.Token{}
-    var scanErr error
-    
-    for s.pos < len(s.input) {
-        s.skipWhitespace()
-        if s.current() == 0 {
-            break
-        }
-        t, err := s.tokenize()
-        if err != nil {
-            scanErr = err
-            goto cleanup
-        }
-        if t.Kind == token.KIND_ILLEGAL {
-            scanErr = fmt.Errorf("illegal character at line %d, column %d", t.Position.Line, t.Position.Column)
-            goto cleanup
-        }
-        result = append(result, t)
-    }
-    result = append(result, token.New("", token.KIND_EOF, token.NewPosition(s.line, s.col, s.pos)))
-    return result, nil
+	s.reset()
+	if !s.setupOn {
+		s.setup()
+	}
+	result := []*token.Token{}
+	var scanErr error
+
+	for s.pos < len(s.input) {
+		s.skipWhitespace()
+		if s.current() == 0 {
+			break
+		}
+		t, err := s.tokenize()
+		if err != nil {
+			scanErr = err
+			goto cleanup
+		}
+		if t.Kind == token.KIND_ILLEGAL {
+			scanErr = fmt.Errorf("illegal character at line %d, column %d", t.Position.Line, t.Position.Column)
+			goto cleanup
+		}
+		result = append(result, t)
+	}
+	result = append(result, token.New("", token.KIND_EOF, token.NewPosition(s.line, s.col, s.pos)))
+	return result, nil
 
 cleanup:
-    result = append(result, token.New("", token.KIND_EOF, token.NewPosition(s.line, s.col, s.pos)))
-    return result, scanErr
+	result = append(result, token.New("", token.KIND_EOF, token.NewPosition(s.line, s.col, s.pos)))
+	return result, scanErr
 }
