@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	input := `sds23d_SD 232323`
+	input := "sds23d_SD 232323\nstring"
 	s := scanner.New(input)
 	tokens, err := s.Scan()
 	if err != nil {

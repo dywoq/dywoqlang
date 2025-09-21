@@ -39,11 +39,21 @@ func (s *Scanner) advance(i int) {
 	if s.pos >= len(s.input) {
 		return
 	}
-	s.pos += i
-	s.col++
-	if s.current() == '\n' {
-		s.col = 1
-		s.line++
+	for j := 0; j < i; j++ {
+		if s.pos >= len(s.input) {
+			return
+		}
+
+		char := s.current()
+		s.pos++
+		s.col++
+
+		if char == '\n' {
+			s.col = 1
+			s.line++
+		} else if char == '\r' {
+			s.col = 1
+		}
 	}
 }
 
@@ -208,7 +218,7 @@ func (s *Scanner) tokenizeKeyword(r rune) (*token.Token, error) {
 		goto restore
 	}
 	s.advance(1)
-	return token.New(str, token.KIND_KEYWORD, token.NewPosition(s.line, s.col, s.pos)), nil
+	return token.New(str, token.KIND_KEYWORD, token.NewPosition(startLine, startCol, startPos)), nil
 
 restore:
 	s.pos, s.line, s.col = startPos, startLine, startCol
@@ -233,7 +243,7 @@ func (s *Scanner) tokenizeIdentifier(r rune) (*token.Token, error) {
 		return nil, err
 	}
 	if token.IsIdentifier(str) {
-		return token.New(str, token.KIND_IDENTIFIER, token.NewPosition(s.pos, s.col, s.pos)), nil
+		return token.New(str, token.KIND_IDENTIFIER, token.NewPosition(startLine, startCol, startPos)), nil
 	}
 	s.pos, s.line, s.col = startPos, startLine, startCol
 	return nil, errNoMatch
@@ -243,7 +253,7 @@ func (s *Scanner) tokenizeInteger(r rune) (*token.Token, error) {
 	if !unicode.IsNumber(r) {
 		return nil, errNoMatch
 	}
-	startPos := s.pos
+	startLine, startCol, startPos := s.line, s.col, s.pos
 	s.advance(1)
 	for unicode.IsNumber(s.current()) {
 		s.advance(1)
@@ -252,7 +262,7 @@ func (s *Scanner) tokenizeInteger(r rune) (*token.Token, error) {
 	if err != nil {
 		return nil, err
 	}
-	return token.New(str, token.KIND_INTEGER, token.NewPosition(s.pos, s.col, s.pos)), nil
+	return token.New(str, token.KIND_INTEGER, token.NewPosition(startLine, startCol, startPos)), nil
 }
 
 func (s *Scanner) skipWhitespace() {
