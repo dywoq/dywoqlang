@@ -1,5 +1,8 @@
-add int32 (int32, int32):
-	mov li1, param1
-	mov li2, param2
-	add li2, false
-	ret li2
+export myadd int64 (int64, int64):
+	mov r1, param1, sd
+	mov r2, param2
+	add r2, r1
+	ret r2;
+
+main int32 ():
+	write 2

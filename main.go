@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/dywoq/dywoqlang/parser"
 	"github.com/dywoq/dywoqlang/scanner"
 )
 
@@ -18,10 +19,16 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	
-	for _, token := range tokens {
-		if token != nil {
-			fmt.Println(*token)
-		}
+
+	p := parser.New(tokens)
+	ast, err := p.Parse()
+	if err != nil {
+		panic(err)
 	}
+	
+	json, err := parser.NodeToJson(ast)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(string(json))
 }

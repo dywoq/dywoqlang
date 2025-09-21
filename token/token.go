@@ -61,6 +61,7 @@ var (
 		":": KIND_SEPARATOR,
 		"[": KIND_SEPARATOR,
 		"]": KIND_SEPARATOR,
+		";": KIND_SEPARATOR,
 	}
 
 	Types = Map{

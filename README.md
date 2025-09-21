@@ -39,11 +39,11 @@ return_code int8 10
 hi_dywoqlang string "Hi, dywoqlang!"
 ```
 
-To use them, you need to explicitly put their names into []:
+To use them:
 ```dl
 main int32:
-	mov li1, [return_code]
-	mov lstr1, [hi_dywoqlang]
+	mov li1, return_code
+	mov lstr1, hi_dywoqlang
 
 	write li1
 	write lstr1
