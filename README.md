@@ -32,3 +32,19 @@ main int32:
 	write i1
 	ret 0 
 ```
+
+If you want to initialize global variables, you need to do this:
+```dl
+return_code int8 10
+hi_dywoqlang string "Hi, dywoqlang!"
+```
+
+To use them, you need to explicitly put their names into []:
+```dl
+main int32:
+	mov li1, [return_code]
+	mov lstr1, [hi_dywoqlang]
+
+	write li1
+	write lstr1
+```
