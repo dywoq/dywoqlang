@@ -1,0 +1,2 @@
+ssd int32:
+	mov x, 10

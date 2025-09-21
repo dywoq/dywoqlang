@@ -60,12 +60,13 @@ func (s *Scanner) advance(i int) {
 
 func (s *Scanner) setup() {
 	s.setupOn = true
-	s.tokenizers = append(s.tokenizers, s.tokenizeKeyword)
-	s.tokenizers = append(s.tokenizers, s.tokenizeIdentifier)
-	s.tokenizers = append(s.tokenizers, s.tokenizeString)
-	s.tokenizers = append(s.tokenizers, s.tokenizeInteger)
-	s.tokenizers = append(s.tokenizers, s.tokenizeSeparator)
 	s.tokenizers = append(s.tokenizers, s.tokenizeType)
+    s.tokenizers = append(s.tokenizers, s.tokenizeBaseInstruction)
+    s.tokenizers = append(s.tokenizers, s.tokenizeKeyword)
+    s.tokenizers = append(s.tokenizers, s.tokenizeString)
+    s.tokenizers = append(s.tokenizers, s.tokenizeInteger)
+    s.tokenizers = append(s.tokenizers, s.tokenizeSeparator)
+    s.tokenizers = append(s.tokenizers, s.tokenizeIdentifier)
 }
 
 func (s *Scanner) reset() {
@@ -130,7 +131,6 @@ func (s *Scanner) tokenizeType(r rune) (*token.Token, error) {
 	}
 
 	startPos, startLine, startCol := s.pos, s.line, s.col
-
 	s.advance(1)
 	for unicode.IsLetter(s.current()) {
 		s.advance(1)
@@ -138,13 +138,15 @@ func (s *Scanner) tokenizeType(r rune) (*token.Token, error) {
 
 	strType, err := s.slice(startPos, s.pos)
 	if err != nil {
-		goto restore
+		s.pos, s.line, s.col = startPos, startLine, startCol
+		return nil, errNoMatch
 	}
 
 	switch strType {
 	case "int", "uint":
 		if !unicode.IsNumber(s.current()) {
-			goto restore
+			s.pos, s.line, s.col = startPos, startLine, startCol
+			return nil, errNoMatch
 		}
 
 		numStart := s.pos
@@ -154,25 +156,24 @@ func (s *Scanner) tokenizeType(r rune) (*token.Token, error) {
 
 		numberPart, err := s.slice(numStart, s.pos)
 		if err != nil {
-			goto restore
+			s.pos, s.line, s.col = startPos, startLine, startCol
+			return nil, errNoMatch
 		}
 		result := strType + numberPart
 
 		if !token.Types.Is(result) {
-			goto restore
+			s.pos, s.line, s.col = startPos, startLine, startCol
+			return nil, errNoMatch
 		}
-		return token.New(result, token.KIND_TYPE, token.NewPosition(s.line, s.col, s.pos)), nil
+		return token.New(result, token.KIND_TYPE, token.NewPosition(startLine, startCol, startPos)), nil
 
 	case "string", "bool":
-		return token.New(strType, token.KIND_TYPE, token.NewPosition(s.line, s.col, s.pos)), nil
+		return token.New(strType, token.KIND_TYPE, token.NewPosition(startLine, startCol, startPos)), nil
 
 	default:
-		goto restore
+		s.pos, s.line, s.col = startPos, startLine, startCol
+		return nil, errNoMatch
 	}
-
-restore:
-	s.pos, s.line, s.col = startPos, startLine, startCol
-	return nil, err
 }
 
 func (s *Scanner) tokenizeString(r rune) (*token.Token, error) {
@@ -266,10 +267,31 @@ func (s *Scanner) tokenizeInteger(r rune) (*token.Token, error) {
 	return token.New(str, token.KIND_INTEGER, token.NewPosition(startLine, startCol, startPos)), nil
 }
 
-func (s *Scanner) skipWhitespace() {
-	if unicode.IsSpace(s.current()) {
+func (s *Scanner) tokenizeBaseInstruction(r rune) (*token.Token, error) {
+	if !unicode.IsLetter(r) {
+		return nil, errNoMatch
+	}
+	startLine, startCol, startPos := s.line, s.col, s.pos
+	s.advance(1)
+	for unicode.IsLetter(s.current()) {
 		s.advance(1)
 	}
+	str, err := s.slice(startPos, s.pos)
+	if err != nil {
+		return nil, err
+	}
+	if !token.BaseInstructions.Is(str) {
+		s.line, s.col, s.pos = startLine, startCol, startPos
+		return nil, errNoMatch
+	}
+	s.advance(1)
+	return token.New(str, token.KIND_BASE_INSTRUCTION, token.NewPosition(startLine, startCol, startPos)), nil
+}
+
+func (s *Scanner) skipWhitespace() {
+	for unicode.IsSpace(s.current()) {
+        s.advance(1)
+    }
 }
 
 func (s *Scanner) Scan() ([]*token.Token, error) {

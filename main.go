@@ -2,13 +2,18 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/dywoq/dywoqlang/scanner"
 )
 
 func main() {
-	input := "sds23d_SD 232323\nstring"
-	s := scanner.New(input)
+	data, err := os.ReadFile("./main.dl")
+	if err != nil {
+		panic(err)
+	}
+
+	s := scanner.New(string(data))
 	tokens, err := s.Scan()
 	if err != nil {
 		panic(err)
