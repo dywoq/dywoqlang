@@ -2,7 +2,6 @@ export myadd int64 (int64, int64):
 	mov r1, param1, sd
 	mov r2, param2
 	add r2, r1
-	ret r2;
-
+	ret r2
 main int32 ():
 	write 2
