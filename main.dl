@@ -1,2 +1,5 @@
-ssd int32:
-	mov x, 10
+add int32 (int32, int32):
+	mov li1, param1
+	mov li2, param2
+	add li2, li1
+	ret li2        

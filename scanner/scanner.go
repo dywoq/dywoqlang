@@ -61,12 +61,12 @@ func (s *Scanner) advance(i int) {
 func (s *Scanner) setup() {
 	s.setupOn = true
 	s.tokenizers = append(s.tokenizers, s.tokenizeType)
-    s.tokenizers = append(s.tokenizers, s.tokenizeBaseInstruction)
-    s.tokenizers = append(s.tokenizers, s.tokenizeKeyword)
-    s.tokenizers = append(s.tokenizers, s.tokenizeString)
-    s.tokenizers = append(s.tokenizers, s.tokenizeInteger)
-    s.tokenizers = append(s.tokenizers, s.tokenizeSeparator)
-    s.tokenizers = append(s.tokenizers, s.tokenizeIdentifier)
+	s.tokenizers = append(s.tokenizers, s.tokenizeBaseInstruction)
+	s.tokenizers = append(s.tokenizers, s.tokenizeKeyword)
+	s.tokenizers = append(s.tokenizers, s.tokenizeString)
+	s.tokenizers = append(s.tokenizers, s.tokenizeInteger)
+	s.tokenizers = append(s.tokenizers, s.tokenizeSeparator)
+	s.tokenizers = append(s.tokenizers, s.tokenizeIdentifier)
 }
 
 func (s *Scanner) reset() {
@@ -290,8 +290,8 @@ func (s *Scanner) tokenizeBaseInstruction(r rune) (*token.Token, error) {
 
 func (s *Scanner) skipWhitespace() {
 	for unicode.IsSpace(s.current()) {
-        s.advance(1)
-    }
+		s.advance(1)
+	}
 }
 
 func (s *Scanner) Scan() ([]*token.Token, error) {
