@@ -8,14 +8,15 @@ import (
 )
 
 type Parser struct {
-	pos     int
-	tokens  []*token.Token
-	parsers []parserFunc
-	setupOn bool
+	pos           int
+	tokens        []*token.Token
+	parsers       []parserFunc
+	setupOn       bool
+	currentModule string
 }
 
 func New(tokens []*token.Token) *Parser {
-	return &Parser{0, tokens, []parserFunc{}, false}
+	return &Parser{0, tokens, []parserFunc{}, false, "main"}
 }
 
 type parserFunc func(t *token.Token) (Node, error)
@@ -46,7 +47,7 @@ func (p *Parser) reset() {
 func (p *Parser) setup() {
 	p.setupOn = true
 	p.parsers = append(p.parsers, p.parseInstructionCall)
-	p.parsers = append(p.parsers, p.parseFunctionDeclaration)
+	p.parsers = append(p.parsers, p.parseDeclaration)
 }
 
 func (p *Parser) parse() (Node, error) {
@@ -154,9 +155,18 @@ func (p *Parser) parseInstructionCall(t *token.Token) (Node, error) {
 	}, nil
 }
 
-
-func (p *Parser) parseFunctionDeclaration(t *token.Token) (Node, error) {
+func (p *Parser) parseDeclaration(t *token.Token) (Node, error) {
 	startPos := p.pos
+	if t.Literal == "module" {
+		p.advance(1)
+		moduleName := p.current()
+		if moduleName.Kind != token.KIND_IDENTIFIER {
+			return nil, fmt.Errorf("expected module name at line %d, column %d: %s", moduleName.Position.Line, moduleName.Position.Column, moduleName.Literal)
+		}
+		p.currentModule = moduleName.Literal
+		p.advance(1)
+		return ModuleDeclaration{Name: moduleName.Literal}, nil
+	}
 	exported := false
 	if t != nil && t.Literal == "export" {
 		exported = true
@@ -170,15 +180,36 @@ func (p *Parser) parseFunctionDeclaration(t *token.Token) (Node, error) {
 	}
 	p.advance(1)
 
-	functionType := p.current()
-	if functionType == nil || functionType.Kind != token.KIND_TYPE {
+	ttype := p.current()
+	if ttype == nil || ttype.Kind != token.KIND_TYPE {
 		p.pos = startPos
 		return nil, errNoMatch
 	}
 	p.advance(1)
 
-	paren := p.current()
-	if paren == nil || paren.Kind != token.KIND_SEPARATOR || paren.Literal != "(" {
+	if p.current() != nil && p.current().Literal == "(" {
+		return p.parseFunctionDeclaration(identifier, ttype, exported)
+	}
+
+	valueNode, err := p.parseValue()
+	if err != nil {
+		p.pos = startPos
+		return nil, err
+	}
+
+	return VariableDeclaration{
+		Name:         identifier.Literal,
+		Type:         ttype.Literal,
+		Value:        valueNode,
+		Exported:     exported,
+		ExportedFrom: p.currentModule,
+	}, nil
+}
+
+func (p *Parser) parseFunctionDeclaration(identifier, ttype *token.Token, exported bool) (Node, error) {
+	startPos := p.pos
+
+	if p.current() == nil || p.current().Literal != "(" {
 		p.pos = startPos
 		return nil, errNoMatch
 	}
@@ -188,7 +219,7 @@ func (p *Parser) parseFunctionDeclaration(t *token.Token) (Node, error) {
 	for p.current() != nil && p.current().Literal != ")" {
 		tok := p.current()
 		if tok.Kind != token.KIND_TYPE {
-			return nil, fmt.Errorf("expected a type in function declaration of %s", identifier.Literal)
+			return nil, fmt.Errorf("expected type in function declaration of %s", identifier.Literal)
 		}
 		params = append(params, tok.Literal)
 		p.advance(1)
@@ -210,10 +241,7 @@ func (p *Parser) parseFunctionDeclaration(t *token.Token) (Node, error) {
 	p.advance(1)
 
 	body := []Node{}
-	for p.current() != nil &&
-		p.current().Kind != token.KIND_EOF &&
-		!p.isFunctionStart() {
-
+	for p.current() != nil && p.current().Kind != token.KIND_EOF && !p.isFunctionStart() {
 		if p.current().Kind == token.KIND_SEPARATOR && p.current().Literal == ";" {
 			p.advance(1)
 			continue
@@ -232,11 +260,12 @@ func (p *Parser) parseFunctionDeclaration(t *token.Token) (Node, error) {
 	}
 
 	return FunctionDeclaration{
-		Name:        identifier.Literal,
-		ParamsTypes: params,
-		ReturnType:  functionType.Literal,
-		Body:        body,
-		Exported:    exported,
+		Name:         identifier.Literal,
+		ParamsTypes:  params,
+		ReturnType:   ttype.Literal,
+		Body:         body,
+		Exported:     exported,
+		ExportedFrom: p.currentModule,
 	}, nil
 }
 
