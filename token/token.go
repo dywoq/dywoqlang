@@ -10,13 +10,17 @@ type Kind string
 // Used to create maps of keywords.
 type Map map[string]Kind
 
+// Position represents a token position.
+type Position struct {
+	Line, Column, Position int
+}
+
 // Token representing a token with literal,
 // kind, line and column.
 type Token struct {
-	Literal string
-	Kind    Kind
-	Line    int
-	Column  int
+	Literal  string
+	Kind     Kind
+	Position *Position
 }
 
 const (
@@ -80,8 +84,13 @@ func (m Map) Is(value string) bool {
 }
 
 // New returns a new pointer to Token.
-func New(literal string, kind Kind, line, column int) *Token {
-	return &Token{literal, kind, line, column}
+func New(literal string, kind Kind, position *Position) *Token {
+	return &Token{literal, kind, position}
+}
+
+// NewPosition returns a new instance Position.
+func NewPosition(line, col, pos int) *Position {
+	return &Position{line, col, pos}
 }
 
 // IsIdentifier reports whether the value is a valid identifier,
