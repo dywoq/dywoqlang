@@ -1,5 +1,5 @@
 add int32 (int32, int32):
 	mov li1, param1
 	mov li2, param2
-	add li2, li1
-	ret li2        
+	add li2, false
+	ret li2

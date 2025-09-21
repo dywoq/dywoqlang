@@ -66,6 +66,7 @@ func (s *Scanner) setup() {
 	s.tokenizers = append(s.tokenizers, s.tokenizeString)
 	s.tokenizers = append(s.tokenizers, s.tokenizeInteger)
 	s.tokenizers = append(s.tokenizers, s.tokenizeSeparator)
+	s.tokenizers = append(s.tokenizers, s.tokenizeBoolConstants)
 	s.tokenizers = append(s.tokenizers, s.tokenizeIdentifier)
 }
 
@@ -286,6 +287,27 @@ func (s *Scanner) tokenizeBaseInstruction(r rune) (*token.Token, error) {
 	}
 	s.advance(1)
 	return token.New(str, token.KIND_BASE_INSTRUCTION, token.NewPosition(startLine, startCol, startPos)), nil
+}
+
+func (s *Scanner) tokenizeBoolConstants(r rune) (*token.Token, error) {
+	if !unicode.IsLetter(r) {
+		return nil, errNoMatch
+	}
+	startLine, startCol, startPos := s.line, s.col, s.pos
+	s.advance(1)
+	for unicode.IsLetter(s.current()) {
+		s.advance(1)
+	}
+	str, err := s.slice(startPos, s.pos)
+	if err != nil {
+		return nil, err
+	}
+	if !token.BoolConstants.Is(str) {
+		s.line, s.col, s.pos = startLine, startCol, startPos
+		return nil, errNoMatch
+	}
+	s.advance(1)
+	return token.New(str, token.KIND_BOOL_CONSTANT, token.NewPosition(startLine, startCol, startPos)), nil
 }
 
 func (s *Scanner) skipWhitespace() {
