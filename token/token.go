@@ -32,6 +32,7 @@ const (
 	KIND_BASE_INSTRUCTION Kind = "instruction"
 	KIND_INTEGER          Kind = "integer"
 	KIND_STRING           Kind = "string"
+	KIND_FLOAT            Kind = "float"
 	KIND_SEPARATOR        Kind = "separator"
 	KIND_TYPE             Kind = "type"
 	KIND_BOOL_CONSTANT    Kind = "bool_constant"
@@ -63,8 +64,6 @@ var (
 		"(": KIND_SEPARATOR,
 		")": KIND_SEPARATOR,
 		":": KIND_SEPARATOR,
-		"[": KIND_SEPARATOR,
-		"]": KIND_SEPARATOR,
 		";": KIND_SEPARATOR,
 	}
 

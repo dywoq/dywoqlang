@@ -106,7 +106,7 @@ func (p *Parser) parseValue() (Node, error) {
 	}
 
 	switch t.Kind {
-	case token.KIND_INTEGER, token.KIND_IDENTIFIER, token.KIND_BOOL_CONSTANT, token.KIND_STRING:
+	case token.KIND_INTEGER, token.KIND_IDENTIFIER, token.KIND_BOOL_CONSTANT, token.KIND_STRING, token.KIND_FLOAT:
 		node := ValueNode{Kind: t.Kind, Value: t.Literal}
 		p.advance(1)
 		return node, nil
@@ -184,19 +184,29 @@ func (p *Parser) parseDeclaration(t *token.Token) (Node, error) {
 			p.pos = startPos
 			return nil, errNoMatch
 		}
+
 		switch p.current().Literal {
 		case "declare":
 			declared = true
 			p.advance(1)
 			if p.current() != nil && p.current().Literal == "export" {
-				return nil, fmt.Errorf("declare symbols cannot be exported at line %d, column %d",
-					p.current().Position.Line, p.current().Position.Column)
+				return nil, fmt.Errorf(
+					"declare symbols cannot be exported at line %d, column %d",
+					p.current().Position.Line, p.current().Position.Column,
+				)
 			}
 			continue
 		case "export":
 			exported = true
 			p.advance(1)
 			continue
+		default:
+			if p.current().Kind != token.KIND_IDENTIFIER {
+				return nil, fmt.Errorf(
+					"unexpected symbol '%s' at line %d, column %d",
+					p.current().Literal, p.current().Position.Line, p.current().Position.Column,
+				)
+			}
 		}
 		break
 	}
@@ -233,7 +243,8 @@ func (p *Parser) parseDeclaration(t *token.Token) (Node, error) {
 	if value.Kind != token.KIND_BOOL_CONSTANT &&
 		value.Kind != token.KIND_INTEGER &&
 		value.Kind != token.KIND_IDENTIFIER &&
-		value.Kind != token.KIND_STRING {
+		value.Kind != token.KIND_STRING &&
+		value.Kind != token.KIND_FLOAT {
 		return nil, fmt.Errorf("variable %s of type %s must have a value", identifier.Literal, ttype.Literal)
 	}
 

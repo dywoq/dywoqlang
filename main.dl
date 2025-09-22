@@ -1,4 +1,5 @@
 import std 
 
-psdsdi string (int32, int32):
-	ret "HI!";
+export output void (int32, int32):
+	write param1, param2;
+	ret null;

@@ -64,7 +64,7 @@ func (s *Scanner) setup() {
 	s.tokenizers = append(s.tokenizers, s.tokenizeBaseInstruction)
 	s.tokenizers = append(s.tokenizers, s.tokenizeKeyword)
 	s.tokenizers = append(s.tokenizers, s.tokenizeString)
-	s.tokenizers = append(s.tokenizers, s.tokenizeInteger)
+	s.tokenizers = append(s.tokenizers, s.tokenizeNumber)
 	s.tokenizers = append(s.tokenizers, s.tokenizeSeparator)
 	s.tokenizers = append(s.tokenizers, s.tokenizeBoolConstants)
 	s.tokenizers = append(s.tokenizers, s.tokenizeIdentifier)
@@ -173,7 +173,7 @@ func (s *Scanner) tokenizeType(r rune) (*token.Token, error) {
 
 	case "void":
 		return token.New(strType, token.KIND_TYPE, token.NewPosition(startLine, startCol, startPos)), nil
-		
+
 	default:
 		s.pos, s.line, s.col = startPos, startLine, startCol
 		return nil, errNoMatch
@@ -255,22 +255,6 @@ func (s *Scanner) tokenizeIdentifier(r rune) (*token.Token, error) {
 	return nil, errNoMatch
 }
 
-func (s *Scanner) tokenizeInteger(r rune) (*token.Token, error) {
-	if !unicode.IsNumber(r) {
-		return nil, errNoMatch
-	}
-	startLine, startCol, startPos := s.line, s.col, s.pos
-	s.advance(1)
-	for unicode.IsNumber(s.current()) {
-		s.advance(1)
-	}
-	str, err := s.slice(startPos, s.pos)
-	if err != nil {
-		return nil, err
-	}
-	return token.New(str, token.KIND_INTEGER, token.NewPosition(startLine, startCol, startPos)), nil
-}
-
 func (s *Scanner) tokenizeBaseInstruction(r rune) (*token.Token, error) {
 	if !unicode.IsLetter(r) {
 		return nil, errNoMatch
@@ -311,6 +295,55 @@ func (s *Scanner) tokenizeBoolConstants(r rune) (*token.Token, error) {
 	}
 	s.advance(1)
 	return token.New(str, token.KIND_BOOL_CONSTANT, token.NewPosition(startLine, startCol, startPos)), nil
+}
+
+func (s *Scanner) tokenizeNumber(r rune) (*token.Token, error) {
+	startLine, startCol, startPos := s.line, s.col, s.pos
+	hasDot := false
+
+	if r == '-' {
+		if s.pos+1 >= len(s.input) || !unicode.IsNumber(rune(s.input[s.pos+1])) {
+			return nil, errNoMatch
+		}
+		s.advance(1)
+		r = s.current()
+	}
+
+	if !unicode.IsNumber(r) {
+		return nil, errNoMatch
+	}
+
+	for {
+		c := s.current()
+		if unicode.IsNumber(c) {
+			s.advance(1)
+			continue
+		}
+		if c == '.' {
+			if hasDot {
+				break
+			}
+			hasDot = true
+			s.advance(1)
+			if !unicode.IsNumber(s.current()) {
+				s.pos, s.line, s.col = startPos, startLine, startCol
+				return nil, fmt.Errorf("invalid float literal at line %d, column %d", startLine, startCol)
+			}
+			continue
+		}
+		break
+	}
+
+	str, err := s.slice(startPos, s.pos)
+	if err != nil {
+		s.pos, s.line, s.col = startPos, startLine, startCol
+		return nil, err
+	}
+
+	if hasDot {
+		return token.New(str, token.KIND_FLOAT, token.NewPosition(startLine, startCol, startPos)), nil
+	}
+	return token.New(str, token.KIND_INTEGER, token.NewPosition(startLine, startCol, startPos)), nil
 }
 
 func (s *Scanner) skipWhitespace() {
