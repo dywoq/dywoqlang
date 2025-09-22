@@ -106,7 +106,7 @@ func (p *Parser) parseValue() (Node, error) {
 	}
 
 	switch t.Kind {
-	case token.KIND_INTEGER, token.KIND_IDENTIFIER, token.KIND_BOOL_CONSTANT:
+	case token.KIND_INTEGER, token.KIND_IDENTIFIER, token.KIND_BOOL_CONSTANT, token.KIND_STRING:
 		node := ValueNode{Kind: t.Kind, Value: t.Literal}
 		p.advance(1)
 		return node, nil
@@ -179,14 +179,26 @@ func (p *Parser) parseDeclaration(t *token.Token) (Node, error) {
 	exported := false
 	declared := false
 
-	if t != nil && t.Literal == "declare" {
-		declared = true
-		p.advance(1)
-	}
-
-	if t != nil && t.Literal == "export" {
-		exported = true
-		p.advance(1)
+	for {
+		if p.current() == nil {
+			p.pos = startPos
+			return nil, errNoMatch
+		}
+		switch p.current().Literal {
+		case "declare":
+			declared = true
+			p.advance(1)
+			if p.current() != nil && p.current().Literal == "export" {
+				return nil, fmt.Errorf("declare symbols cannot be exported at line %d, column %d",
+					p.current().Position.Line, p.current().Position.Column)
+			}
+			continue
+		case "export":
+			exported = true
+			p.advance(1)
+			continue
+		}
+		break
 	}
 
 	identifier := p.current()
@@ -197,9 +209,8 @@ func (p *Parser) parseDeclaration(t *token.Token) (Node, error) {
 	p.advance(1)
 
 	ttype := p.current()
-	if ttype == nil || ttype.Kind != token.KIND_TYPE {
-		p.pos = startPos
-		return nil, errNoMatch
+	if !token.Types.Is(ttype.Literal) {
+		return nil, fmt.Errorf("unknown type '%s' at line %d, column %d", ttype.Literal, ttype.Position.Line, ttype.Position.Column)
 	}
 	p.advance(1)
 
@@ -218,11 +229,19 @@ func (p *Parser) parseDeclaration(t *token.Token) (Node, error) {
 		}, nil
 	}
 
+	value := p.current()
+	if value.Kind != token.KIND_BOOL_CONSTANT &&
+		value.Kind != token.KIND_INTEGER &&
+		value.Kind != token.KIND_IDENTIFIER &&
+		value.Kind != token.KIND_STRING {
+		return nil, fmt.Errorf("variable %s of type %s must have a value", identifier.Literal, ttype.Literal)
+	}
+
 	valueNode, err := p.parseValue()
 	if err != nil {
-		p.pos = startPos
 		return nil, err
 	}
+
 	return VariableDeclaration{
 		Name:       identifier.Literal,
 		Type:       ttype.Literal,
@@ -235,7 +254,7 @@ func (p *Parser) parseDeclaration(t *token.Token) (Node, error) {
 
 func (p *Parser) parseFunctionDeclaration(identifier, ttype *token.Token, exported, declared bool) (Node, error) {
 	if p.current() == nil || p.current().Literal != "(" {
-		return nil, fmt.Errorf("expected '(' before the function %s at line %d, column %d", identifier, identifier.Position.Line, identifier.Position.Column)
+		return nil, fmt.Errorf("expected '(' before the function %s at line %d, column %d", identifier.Literal, identifier.Position.Line, identifier.Position.Column)
 	}
 	p.advance(1)
 
@@ -251,8 +270,9 @@ func (p *Parser) parseFunctionDeclaration(identifier, ttype *token.Token, export
 			p.advance(1)
 		}
 	}
+
 	if p.current() == nil || p.current().Literal != ")" {
-		return nil, fmt.Errorf("expected ')' before the symbol `:` in function %s at line %d, column %d", identifier.Literal, identifier.Position.Line, identifier.Position.Column)
+		return nil, fmt.Errorf("expected ')' in function %s at line %d, column %d", identifier.Literal, identifier.Position.Line, identifier.Position.Column)
 	}
 	p.advance(1)
 
@@ -269,19 +289,24 @@ func (p *Parser) parseFunctionDeclaration(identifier, ttype *token.Token, export
 	}
 
 	if p.current() == nil || p.current().Literal != ":" {
-		return nil, fmt.Errorf("expected ':' before function body in function %s at line %d, column %d", identifier.Literal, identifier.Position.Line, identifier.Position.Column)
+		return nil, fmt.Errorf("non-declared function %s must have a body at line %d, column %d", identifier.Literal, identifier.Position.Line, identifier.Position.Column)
 	}
 	p.advance(1)
 
 	body := []Node{}
-	for p.current() != nil && p.current().Kind != token.KIND_EOF && !p.isFunctionStart() {
-		if p.current().Kind == token.KIND_SEPARATOR && p.current().Literal == ";" {
+	for {
+		t := p.current()
+		if t == nil || t.Kind == token.KIND_EOF || p.isFunctionStart() {
+			break
+		}
+
+		if t.Kind == token.KIND_SEPARATOR && t.Literal == ";" {
 			p.advance(1)
 			continue
 		}
 
-		if p.current().Kind == token.KIND_BASE_INSTRUCTION {
-			instr, err := p.parseInstructionCall(p.current())
+		if t.Kind == token.KIND_BASE_INSTRUCTION {
+			instr, err := p.parseInstructionCall(t)
 			if err != nil {
 				return nil, err
 			}
@@ -291,6 +316,11 @@ func (p *Parser) parseFunctionDeclaration(identifier, ttype *token.Token, export
 
 		p.advance(1)
 	}
+
+	if len(body) == 0 {
+		return nil, fmt.Errorf("non-declared function %s must contain at least one instruction at line %d, column %d", identifier.Literal, identifier.Position.Line, identifier.Position.Column)
+	}
+
 	return FunctionDeclaration{
 		Name:        identifier.Literal,
 		ParamsTypes: params,
