@@ -146,7 +146,6 @@ func (p *Parser) parseInstructionCall(t *token.Token) (Node, error) {
 
 	args := []Node{}
 
-	// parseArguments loops through and parses all arguments until a semicolon is found.
 	for p.current() != nil && p.current().Kind != token.KIND_EOF && !p.isFunctionStart() {
 		if p.current().Kind == token.KIND_SEPARATOR && p.current().Literal == ";" {
 			break
@@ -164,7 +163,6 @@ func (p *Parser) parseInstructionCall(t *token.Token) (Node, error) {
 		}
 	}
 
-	// requireSemicolonAtEnd checks if a semicolon exists and advances the position.
 	if p.current() == nil || p.current().Kind != token.KIND_SEPARATOR || p.current().Literal != ";" {
 		return nil, fmt.Errorf("expected semicolon at the end of instruction call at line %d, column %d", t.Position.Line, t.Position.Column)
 	}
@@ -179,6 +177,13 @@ func (p *Parser) parseInstructionCall(t *token.Token) (Node, error) {
 func (p *Parser) parseDeclaration(t *token.Token) (Node, error) {
 	startPos := p.pos
 	exported := false
+	declared := false
+
+	if t != nil && t.Literal == "declare" {
+		declared = true
+		p.advance(1)
+	}
+
 	if t != nil && t.Literal == "export" {
 		exported = true
 		p.advance(1)
@@ -199,7 +204,18 @@ func (p *Parser) parseDeclaration(t *token.Token) (Node, error) {
 	p.advance(1)
 
 	if p.current() != nil && p.current().Literal == "(" {
-		return p.parseFunctionDeclaration(identifier, ttype, exported)
+		return p.parseFunctionDeclaration(identifier, ttype, exported, declared)
+	}
+
+	if declared {
+		return VariableDeclaration{
+			Name:       identifier.Literal,
+			Type:       ttype.Literal,
+			Value:      nil,
+			Exported:   exported,
+			DeclaredIn: p.currentModule,
+			Declared:   declared,
+		}, nil
 	}
 
 	valueNode, err := p.parseValue()
@@ -213,10 +229,11 @@ func (p *Parser) parseDeclaration(t *token.Token) (Node, error) {
 		Value:      valueNode,
 		Exported:   exported,
 		DeclaredIn: p.currentModule,
+		Declared:   declared,
 	}, nil
 }
 
-func (p *Parser) parseFunctionDeclaration(identifier, ttype *token.Token, exported bool) (Node, error) {
+func (p *Parser) parseFunctionDeclaration(identifier, ttype *token.Token, exported, declared bool) (Node, error) {
 	if p.current() == nil || p.current().Literal != "(" {
 		return nil, fmt.Errorf("expected '(' before the function %s at line %d, column %d", identifier, identifier.Position.Line, identifier.Position.Column)
 	}
@@ -234,11 +251,22 @@ func (p *Parser) parseFunctionDeclaration(identifier, ttype *token.Token, export
 			p.advance(1)
 		}
 	}
-
 	if p.current() == nil || p.current().Literal != ")" {
 		return nil, fmt.Errorf("expected ')' before the symbol `:` in function %s at line %d, column %d", identifier.Literal, identifier.Position.Line, identifier.Position.Column)
 	}
 	p.advance(1)
+
+	if declared {
+		return FunctionDeclaration{
+			Name:        identifier.Literal,
+			ParamsTypes: params,
+			ReturnType:  ttype.Literal,
+			Body:        []Node{},
+			Exported:    exported,
+			DeclaredIn:  p.currentModule,
+			Declared:    declared,
+		}, nil
+	}
 
 	if p.current() == nil || p.current().Literal != ":" {
 		return nil, fmt.Errorf("expected ':' before function body in function %s at line %d, column %d", identifier.Literal, identifier.Position.Line, identifier.Position.Column)
@@ -270,6 +298,7 @@ func (p *Parser) parseFunctionDeclaration(identifier, ttype *token.Token, export
 		Body:        body,
 		Exported:    exported,
 		DeclaredIn:  p.currentModule,
+		Declared:    declared,
 	}, nil
 }
 

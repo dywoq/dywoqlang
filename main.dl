@@ -1,8 +1,3 @@
+module std_math
 
-s void ():
-	mov li1, param1;
-	write li1;
-module org_winplus_23
-
-v void ():
-	mov li2, param1;
+declare pi int64

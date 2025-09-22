@@ -13,12 +13,13 @@ type Node interface {
 }
 
 type FunctionDeclaration struct {
-	Name         string   `json:"name"`
-	ParamsTypes  []string `json:"params_types"`
-	ReturnType   string   `json:"return_type"`
-	Body         []Node   `json:"body"`
-	Exported     bool     `json:"exported"`
-	DeclaredIn   string   `json:"declared_in"`
+	Name        string   `json:"name"`
+	ParamsTypes []string `json:"params_types"`
+	ReturnType  string   `json:"return_type"`
+	Body        []Node   `json:"body"`
+	Exported    bool     `json:"exported"`
+	DeclaredIn  string   `json:"declared_in"`
+	Declared    bool     `json:"declared"`
 }
 
 type InstructionCall struct {
@@ -31,11 +32,12 @@ type InstructionCallArgument struct {
 }
 
 type VariableDeclaration struct {
-	Name         string `json:"name"`
-	Type         string `json:"type"`
-	Value        Node   `json:"value"`
-	Exported     bool   `json:"exported"`
-	DeclaredIn   string `json:"declared_in"`
+	Name       string `json:"name"`
+	Type       string `json:"type"`
+	Value      Node   `json:"value"`
+	Exported   bool   `json:"exported"`
+	DeclaredIn string `json:"declared_in"`
+	Declared   bool   `json:"declared"`
 }
 
 type Illegal struct{}

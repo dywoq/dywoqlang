@@ -41,9 +41,10 @@ const (
 
 var (
 	Keywords = Map{
-		"export": KIND_KEYWORD,
-		"module": KIND_KEYWORD,
-		"import": KIND_KEYWORD,
+		"export":  KIND_KEYWORD,
+		"module":  KIND_KEYWORD,
+		"import":  KIND_KEYWORD,
+		"declare": KIND_KEYWORD,
 	}
 
 	BaseInstructions = Map{
@@ -79,6 +80,7 @@ var (
 		"bool":   KIND_TYPE,
 		"string": KIND_TYPE,
 		"void":   KIND_TYPE,
+		"float":  KIND_TYPE,
 	}
 
 	BoolConstants = Map{
