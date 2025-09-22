@@ -1,4 +1,8 @@
+
+s void ():
+	mov li1, param1;
+	write li1;
 module org_winplus_23
 
-s int64(int64, int64):
-	add li1, sd
+v void ():
+	mov li2, param1;

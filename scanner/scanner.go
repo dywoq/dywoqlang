@@ -171,6 +171,9 @@ func (s *Scanner) tokenizeType(r rune) (*token.Token, error) {
 	case "string", "bool":
 		return token.New(strType, token.KIND_TYPE, token.NewPosition(startLine, startCol, startPos)), nil
 
+	case "void":
+		return token.New(strType, token.KIND_TYPE, token.NewPosition(startLine, startCol, startPos)), nil
+		
 	default:
 		s.pos, s.line, s.col = startPos, startLine, startCol
 		return nil, errNoMatch

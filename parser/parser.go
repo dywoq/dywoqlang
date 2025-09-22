@@ -46,9 +46,9 @@ func (p *Parser) reset() {
 
 func (p *Parser) setup() {
 	p.setupOn = true
+	p.parsers = append(p.parsers, p.parseModule)
 	p.parsers = append(p.parsers, p.parseInstructionCall)
 	p.parsers = append(p.parsers, p.parseDeclaration)
-	p.parsers = append(p.parsers, p.parseModule)
 }
 
 func (p *Parser) parse() (Node, error) {
@@ -81,6 +81,22 @@ func (p *Parser) isFunctionStart() bool {
 		return true
 	}
 	return false
+}
+
+func (p *Parser) handleInstruction() (Node, error) {
+	if p.current().Kind == token.KIND_SEPARATOR && p.current().Literal == ";" {
+		p.advance(1)
+	}
+
+	if p.current().Kind == token.KIND_BASE_INSTRUCTION {
+		instr, err := p.parseInstructionCall(p.current())
+		if err != nil {
+			return nil, err
+		}
+		return instr, nil
+	}
+
+	return nil, fmt.Errorf("unexpected token kind: %s", p.current().Literal)
 }
 
 func (p *Parser) parseValue() (Node, error) {
@@ -129,26 +145,30 @@ func (p *Parser) parseInstructionCall(t *token.Token) (Node, error) {
 	p.advance(1)
 
 	args := []Node{}
-	for p.current() != nil &&
-		p.current().Kind != token.KIND_EOF &&
-		p.current().Kind != token.KIND_BASE_INSTRUCTION &&
-		!p.isFunctionStart() {
 
+	// parseArguments loops through and parses all arguments until a semicolon is found.
+	for p.current() != nil && p.current().Kind != token.KIND_EOF && !p.isFunctionStart() {
 		if p.current().Kind == token.KIND_SEPARATOR && p.current().Literal == ";" {
-			p.advance(1)
-			continue
+			break
 		}
 
-		value, err := p.parseValue()
+		val, err := p.parseValue()
 		if err != nil {
 			return nil, err
 		}
-		args = append(args, value)
+
+		args = append(args, val)
 
 		if p.current() != nil && p.current().Kind == token.KIND_SEPARATOR && p.current().Literal == "," {
 			p.advance(1)
 		}
 	}
+
+	// requireSemicolonAtEnd checks if a semicolon exists and advances the position.
+	if p.current() == nil || p.current().Kind != token.KIND_SEPARATOR || p.current().Literal != ";" {
+		return nil, fmt.Errorf("expected semicolon at the end of instruction call at line %d, column %d", t.Position.Line, t.Position.Column)
+	}
+	p.advance(1)
 
 	return InstructionCall{
 		Name:      instructionName,
@@ -188,20 +208,17 @@ func (p *Parser) parseDeclaration(t *token.Token) (Node, error) {
 		return nil, err
 	}
 	return VariableDeclaration{
-		Name:         identifier.Literal,
-		Type:         ttype.Literal,
-		Value:        valueNode,
-		Exported:     exported,
-		DeclaredIn:   p.currentModule,
+		Name:       identifier.Literal,
+		Type:       ttype.Literal,
+		Value:      valueNode,
+		Exported:   exported,
+		DeclaredIn: p.currentModule,
 	}, nil
 }
 
 func (p *Parser) parseFunctionDeclaration(identifier, ttype *token.Token, exported bool) (Node, error) {
-	startPos := p.pos
-
 	if p.current() == nil || p.current().Literal != "(" {
-		p.pos = startPos
-		return nil, errNoMatch
+		return nil, fmt.Errorf("expected '(' before the function %s at line %d, column %d", identifier, identifier.Position.Line, identifier.Position.Column)
 	}
 	p.advance(1)
 
@@ -219,14 +236,12 @@ func (p *Parser) parseFunctionDeclaration(identifier, ttype *token.Token, export
 	}
 
 	if p.current() == nil || p.current().Literal != ")" {
-		p.pos = startPos
-		return nil, errNoMatch
+		return nil, fmt.Errorf("expected ')' before the symbol `:` in function %s at line %d, column %d", identifier.Literal, identifier.Position.Line, identifier.Position.Column)
 	}
 	p.advance(1)
 
 	if p.current() == nil || p.current().Literal != ":" {
-		p.pos = startPos
-		return nil, errNoMatch
+		return nil, fmt.Errorf("expected ':' before function body in function %s at line %d, column %d", identifier.Literal, identifier.Position.Line, identifier.Position.Column)
 	}
 	p.advance(1)
 
@@ -249,12 +264,12 @@ func (p *Parser) parseFunctionDeclaration(identifier, ttype *token.Token, export
 		p.advance(1)
 	}
 	return FunctionDeclaration{
-		Name:         identifier.Literal,
-		ParamsTypes:  params,
-		ReturnType:   ttype.Literal,
-		Body:         body,
-		Exported:     exported,
-		DeclaredIn:   p.currentModule,
+		Name:        identifier.Literal,
+		ParamsTypes: params,
+		ReturnType:  ttype.Literal,
+		Body:        body,
+		Exported:    exported,
+		DeclaredIn:  p.currentModule,
 	}, nil
 }
 

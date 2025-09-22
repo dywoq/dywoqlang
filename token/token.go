@@ -64,6 +64,7 @@ var (
 		":": KIND_SEPARATOR,
 		"[": KIND_SEPARATOR,
 		"]": KIND_SEPARATOR,
+		";": KIND_SEPARATOR,
 	}
 
 	Types = Map{
@@ -77,6 +78,7 @@ var (
 		"uint64": KIND_TYPE,
 		"bool":   KIND_TYPE,
 		"string": KIND_TYPE,
+		"void":   KIND_TYPE,
 	}
 
 	BoolConstants = Map{
