@@ -187,13 +187,12 @@ func (p *Parser) parseDeclaration(t *token.Token) (Node, error) {
 		p.pos = startPos
 		return nil, err
 	}
-
 	return VariableDeclaration{
 		Name:         identifier.Literal,
 		Type:         ttype.Literal,
 		Value:        valueNode,
 		Exported:     exported,
-		ExportedFrom: p.currentModule,
+		DeclaredIn:   p.currentModule,
 	}, nil
 }
 
@@ -249,14 +248,13 @@ func (p *Parser) parseFunctionDeclaration(identifier, ttype *token.Token, export
 
 		p.advance(1)
 	}
-
 	return FunctionDeclaration{
 		Name:         identifier.Literal,
 		ParamsTypes:  params,
 		ReturnType:   ttype.Literal,
 		Body:         body,
 		Exported:     exported,
-		ExportedFrom: p.currentModule,
+		DeclaredIn:   p.currentModule,
 	}, nil
 }
 

@@ -54,6 +54,7 @@ var (
 		"sub":   KIND_BASE_INSTRUCTION,
 		"ret":   KIND_BASE_INSTRUCTION,
 		"write": KIND_BASE_INSTRUCTION,
+		"call":  KIND_BASE_INSTRUCTION,
 	}
 
 	Separators = Map{

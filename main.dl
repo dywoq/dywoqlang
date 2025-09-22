@@ -1,4 +1,4 @@
 module org_winplus_23
 
-export s int64(int64, int64):
+s int64(int64, int64):
 	add li1, sd

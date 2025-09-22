@@ -18,7 +18,7 @@ type FunctionDeclaration struct {
 	ReturnType   string   `json:"return_type"`
 	Body         []Node   `json:"body"`
 	Exported     bool     `json:"exported"`
-	ExportedFrom string   `json:"exported_from"`
+	DeclaredIn   string   `json:"declared_in"`
 }
 
 type InstructionCall struct {
@@ -35,7 +35,7 @@ type VariableDeclaration struct {
 	Type         string `json:"type"`
 	Value        Node   `json:"value"`
 	Exported     bool   `json:"exported"`
-	ExportedFrom string `json:"exported_from"`
+	DeclaredIn   string `json:"declared_in"`
 }
 
 type Illegal struct{}
@@ -70,5 +70,5 @@ func (Module) Node()                  {}
 
 // NodeToJson converts n to JSON presentation.
 func NodeToJson(n Node) ([]byte, error) {
-	return json.MarshalIndent(n, "ast expression: ", "  ")
+	return json.MarshalIndent(n, "", "  ")
 }
