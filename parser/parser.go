@@ -294,27 +294,14 @@ func (p *Parser) parseFunctionDeclaration(identifier, ttype *token.Token, export
 	p.advance(1)
 
 	body := []Node{}
-	for {
-		t := p.current()
-		if t == nil || t.Kind == token.KIND_EOF || p.isFunctionStart() {
-			break
+	for p.current() != nil && p.current().Kind != token.KIND_EOF && !p.isFunctionStart() {
+		instr, err := p.handleInstruction()
+		if err != nil {
+			return nil, err
 		}
-
-		if t.Kind == token.KIND_SEPARATOR && t.Literal == ";" {
-			p.advance(1)
-			continue
-		}
-
-		if t.Kind == token.KIND_BASE_INSTRUCTION {
-			instr, err := p.parseInstructionCall(t)
-			if err != nil {
-				return nil, err
-			}
+		if instr != nil {
 			body = append(body, instr)
-			continue
 		}
-
-		p.advance(1)
 	}
 
 	if len(body) == 0 {
