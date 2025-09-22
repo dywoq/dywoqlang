@@ -366,7 +366,7 @@ func (s *Scanner) tokenizeComment(r rune) (*token.Token, error) {
 		return nil, err
 	}
 
-	str = strings.TrimLeft(str, " \t") // remove leading spaces
+	str = strings.TrimLeft(str, " \t")
 
 	return token.New(str, token.KIND_COMMENT, token.NewPosition(startLine, startCol, startPos)), nil
 }
