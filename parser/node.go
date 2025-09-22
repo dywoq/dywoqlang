@@ -6,6 +6,8 @@ import (
 	"github.com/dywoq/dywoqlang/token"
 )
 
+type ModuleType string
+
 type Node interface {
 	Node()
 }
@@ -47,9 +49,15 @@ type ValueNode struct {
 	Value string     `json:"value"`
 }
 
-type ModuleDeclaration struct {
-	Name string `json:"name"`
+type Module struct {
+	Name string     `json:"name"`
+	Type ModuleType `json:"type"`
 }
+
+const (
+	ModuleDeclaration ModuleType = "declaration"
+	ModuleImporting   ModuleType = "importing"
+)
 
 func (FunctionDeclaration) Node()     {}
 func (InstructionCall) Node()         {}
@@ -58,7 +66,7 @@ func (Illegal) Node()                 {}
 func (Program) Node()                 {}
 func (InstructionCallArgument) Node() {}
 func (ValueNode) Node()               {}
-func (ModuleDeclaration) Node()       {}
+func (Module) Node()                  {}
 
 // NodeToJson converts n to JSON presentation.
 func NodeToJson(n Node) ([]byte, error) {

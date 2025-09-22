@@ -43,6 +43,7 @@ var (
 	Keywords = Map{
 		"export": KIND_KEYWORD,
 		"module": KIND_KEYWORD,
+		"import": KIND_KEYWORD,
 	}
 
 	BaseInstructions = Map{

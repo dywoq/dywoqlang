@@ -48,6 +48,7 @@ func (p *Parser) setup() {
 	p.setupOn = true
 	p.parsers = append(p.parsers, p.parseInstructionCall)
 	p.parsers = append(p.parsers, p.parseDeclaration)
+	p.parsers = append(p.parsers, p.parseModule)
 }
 
 func (p *Parser) parse() (Node, error) {
@@ -157,16 +158,6 @@ func (p *Parser) parseInstructionCall(t *token.Token) (Node, error) {
 
 func (p *Parser) parseDeclaration(t *token.Token) (Node, error) {
 	startPos := p.pos
-	if t.Literal == "module" {
-		p.advance(1)
-		moduleName := p.current()
-		if moduleName.Kind != token.KIND_IDENTIFIER {
-			return nil, fmt.Errorf("expected module name at line %d, column %d: %s", moduleName.Position.Line, moduleName.Position.Column, moduleName.Literal)
-		}
-		p.currentModule = moduleName.Literal
-		p.advance(1)
-		return ModuleDeclaration{Name: moduleName.Literal}, nil
-	}
 	exported := false
 	if t != nil && t.Literal == "export" {
 		exported = true
@@ -267,6 +258,31 @@ func (p *Parser) parseFunctionDeclaration(identifier, ttype *token.Token, export
 		Exported:     exported,
 		ExportedFrom: p.currentModule,
 	}, nil
+}
+
+func (p *Parser) parseModule(t *token.Token) (Node, error) {
+	if t.Literal == "module" {
+		p.advance(1)
+		moduleName := p.current()
+		if moduleName.Kind != token.KIND_IDENTIFIER {
+			return nil, fmt.Errorf("expected module name at line %d, column %d: %s", moduleName.Position.Line, moduleName.Position.Column, moduleName.Literal)
+		}
+		p.currentModule = moduleName.Literal
+		p.advance(1)
+		return Module{Name: moduleName.Literal, Type: ModuleDeclaration}, nil
+	}
+
+	if t.Literal == "import" {
+		p.advance(1)
+		moduleName := p.current()
+		if moduleName.Kind != token.KIND_IDENTIFIER {
+			return nil, fmt.Errorf("expected module name after import at line %d, column %d: %s", moduleName.Position.Line, moduleName.Position.Column, moduleName.Literal)
+		}
+		p.advance(1)
+		return Module{Name: moduleName.Literal, Type: ModuleImporting}, nil
+	}
+
+	return nil, errNoMatch
 }
 
 func (p *Parser) Parse() (Node, error) {
