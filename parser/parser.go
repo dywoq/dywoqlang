@@ -261,7 +261,7 @@ func (p *Parser) parseFunctionDeclaration(identifier, ttype *token.Token, export
 			Name:        identifier.Literal,
 			ParamsTypes: params,
 			ReturnType:  ttype.Literal,
-			Body:        []Node{},
+			Body:        nil,
 			Exported:    exported,
 			DeclaredIn:  p.currentModule,
 			Declared:    declared,
