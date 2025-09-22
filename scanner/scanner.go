@@ -3,6 +3,7 @@ package scanner
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"unicode"
 
 	"github.com/dywoq/dywoqlang/token"
@@ -60,6 +61,7 @@ func (s *Scanner) advance(i int) {
 
 func (s *Scanner) setup() {
 	s.setupOn = true
+	s.tokenizers = append(s.tokenizers, s.tokenizeComment)
 	s.tokenizers = append(s.tokenizers, s.tokenizeType)
 	s.tokenizers = append(s.tokenizers, s.tokenizeBaseInstruction)
 	s.tokenizers = append(s.tokenizers, s.tokenizeKeyword)
@@ -346,6 +348,28 @@ func (s *Scanner) tokenizeNumber(r rune) (*token.Token, error) {
 	return token.New(str, token.KIND_INTEGER, token.NewPosition(startLine, startCol, startPos)), nil
 }
 
+func (s *Scanner) tokenizeComment(r rune) (*token.Token, error) {
+	if r != '#' {
+		return nil, errNoMatch
+	}
+	startLine, startCol, startPos := s.line, s.col, s.pos
+	s.advance(1)
+
+	commentStart := s.pos
+	for c := s.current(); c != 0 && c != '\n' && c != '\r'; c = s.current() {
+		s.advance(1)
+	}
+
+	str, err := s.slice(commentStart, s.pos)
+	if err != nil {
+		s.pos, s.line, s.col = startPos, startLine, startCol
+		return nil, err
+	}
+
+	str = strings.TrimLeft(str, " \t") // remove leading spaces
+
+	return token.New(str, token.KIND_COMMENT, token.NewPosition(startLine, startCol, startPos)), nil
+}
 func (s *Scanner) skipWhitespace() {
 	for unicode.IsSpace(s.current()) {
 		s.advance(1)

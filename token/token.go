@@ -36,6 +36,7 @@ const (
 	KIND_SEPARATOR        Kind = "separator"
 	KIND_TYPE             Kind = "type"
 	KIND_BOOL_CONSTANT    Kind = "bool_constant"
+	KIND_COMMENT          Kind = "comment"
 	KIND_EOF              Kind = "eof"
 	KIND_ILLEGAL          Kind = "illegal"
 )
