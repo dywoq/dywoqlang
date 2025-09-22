@@ -1,6 +1,9 @@
-import std # importing 
+import std
 
-# output function
-export output void (int32, int32):
-	write param1, param2;
-	ret null;
+# Outputs the function.
+output int32 (int32, int32):
+	ret 2;
+
+# Hi!
+output int32 (int32, int32):
+	ret 2;

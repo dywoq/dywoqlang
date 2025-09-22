@@ -376,6 +376,22 @@ func (s *Scanner) skipWhitespace() {
 	}
 }
 
+func (s *Scanner) skipComments() {
+	for {
+		if s.current() != '#' {
+			break
+		}
+		for s.current() != 0 && s.current() != '\n' && s.current() != '\r' {
+			s.advance(1)
+		}
+		if s.current() == '\n' || s.current() == '\r' {
+			s.advance(1)
+		}
+		s.skipWhitespace()
+	}
+}
+
+
 func (s *Scanner) Scan() ([]*token.Token, error) {
 	s.reset()
 	if !s.setupOn {
@@ -386,6 +402,7 @@ func (s *Scanner) Scan() ([]*token.Token, error) {
 
 	for s.pos < len(s.input) {
 		s.skipWhitespace()
+		s.skipComments()
 		if s.current() == 0 {
 			break
 		}

@@ -288,6 +288,12 @@ func (p *Parser) parseFunctionDeclaration(identifier, ttype *token.Token, export
 	p.advance(1)
 
 	if declared {
+		if p.current() != nil && p.current().Literal == ":" {
+			return nil, fmt.Errorf(
+				"declared function %s cannot have a body at line %d, column %d",
+				identifier.Literal, p.current().Position.Line, p.current().Position.Column,
+			)
+		}
 		return FunctionDeclaration{
 			Name:        identifier.Literal,
 			ParamsTypes: params,
