@@ -12,4 +12,5 @@ public enum TokenKind
 	String,
 	Registry,
 	Type,
+	Illegal
 }

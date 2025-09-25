@@ -1,6 +1,6 @@
 namespace DywoqLang.Lib.Scanner;
 
-public interface IScannerContext : IScannerSlicer, IScannerReader
+public interface IScannerContext : IScannerSlicer, IScannerReader, IScannerPosition, IScannerTokenCreator
 {
 
 }

@@ -16,7 +16,8 @@ public class TokenKindStringer
 			{TokenKind.Integer, "integer"},
 			{TokenKind.Registry, "registry"},
 			{TokenKind.String, "string"},
-			{TokenKind.Type,  "type"}
+			{TokenKind.Type,  "type"},
+			{TokenKind.Illegal, "illegal"}
 		}
 	);
 
