@@ -32,6 +32,9 @@ func TestIsIdentifier(t *testing.T) {
 		{"}", false},
 		{"{", false},
 		{",", false},
+		{"(", false},
+		{")", false},
+		{";", false},
 
 		{"str", false},
 		{"bool", false},

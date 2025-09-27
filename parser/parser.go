@@ -87,10 +87,9 @@ func (p *Parser) Parse(tokens []*token.Token) ([]Node, error) {
 	p.setup()
 	result := []Node{}
 	for !p.Eof() {
-		tok := p.Current()
 		matched := false
 		for _, miniParser := range p.miniParsers {
-			parsed, err := miniParser(p, tok)
+			parsed, err := miniParser(p, p.Current())
 			if err == ErrNoMatch {
 				continue
 			}

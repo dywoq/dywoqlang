@@ -1,0 +1,4 @@
+module name
+
+mov a, 20, 3;
+mov a, 2, 3;

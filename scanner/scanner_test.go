@@ -30,6 +30,9 @@ func TestScannerScan(t *testing.T) {
 		{",", token.KIND_SEPARATOR},
 		{"{", token.KIND_SEPARATOR},
 		{"}", token.KIND_SEPARATOR},
+		{"(", token.KIND_SEPARATOR},
+		{")", token.KIND_SEPARATOR},
+		{";", token.KIND_SEPARATOR},
 
 		// tokenizing types
 		{"str", token.KIND_TYPE},
