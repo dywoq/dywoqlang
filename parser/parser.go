@@ -12,10 +12,12 @@ type Parser struct {
 	pos           int
 	miniParsers   []MiniParser
 	setupOn       bool
+	module        string
 }
 
+// NewParser returns a new pointer to the parser.
 func NewParser() *Parser {
-	return &Parser{currentTokens: []*token.Token{}, pos: 0, miniParsers: []MiniParser{}, setupOn: false}
+	return &Parser{currentTokens: []*token.Token{}, pos: 0, miniParsers: []MiniParser{}, setupOn: false, module: "main"}
 }
 
 // setups setups the default mini parsers,
@@ -34,6 +36,7 @@ func (p *Parser) setup() {
 // and updates the current tokens to the new given ones.
 func (p *Parser) reset(tokens []*token.Token) {
 	p.pos = 0
+	p.module = "main"
 	if !slices.Equal(p.currentTokens, tokens) {
 		p.currentTokens = tokens
 	}
@@ -77,6 +80,17 @@ func (p *Parser) Advance(n int) {
 // Eof reports whether the parser reached EOF token.
 func (p *Parser) Eof() bool {
 	return p.currentTokens[p.pos].Kind == token.KIND_EOF
+}
+
+// Module returns the current module name,
+// main if there's no module set.
+func (p *Parser) Module() string {
+	return p.module
+}
+
+// SetModule sets the module name to name.
+func (p *Parser) SetModule(name string) {
+	p.module = name
 }
 
 func (p *Parser) Parse(tokens []*token.Token) ([]Node, error) {

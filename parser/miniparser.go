@@ -47,7 +47,7 @@ func ParseInstruction(c Context, t *token.Token) (Node, error) {
 
 // ParseModuleStatement parses the module token into the AST node.
 func ParseModuleStatement(c Context, t *token.Token) (Node, error) {
-	if t.Kind != token.KIND_KEYWORD && (t.Literal != "import" || t.Literal != "module") {
+	if t.Kind != token.KIND_KEYWORD && (t.Literal != "import" && t.Literal != "module") {
 		return nil, ErrNoMatch
 	}
 	tType := t.Literal

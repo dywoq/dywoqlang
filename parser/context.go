@@ -25,8 +25,18 @@ type EofChecker interface {
 	Eof() bool
 }
 
+type ModuleManagement interface {
+	// Module returns the current module name,
+	// main if there's no module set.
+	Module() string
+
+	// SetModule sets the module name to name.
+	SetModule(name string)
+}
+
 type Context interface {
 	Reader
 	Advancer
 	EofChecker
+	ModuleManagement
 }
