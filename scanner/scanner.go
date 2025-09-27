@@ -3,7 +3,7 @@ package scanner
 import (
 	"errors"
 
-	"github.com/dywoq/dywoqgame/interpreter/token"
+	"github.com/dywoq/dywoqlang/token"
 )
 
 // Scanner is responsible for tokenizing DywoqGame Lang code.

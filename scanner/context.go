@@ -1,7 +1,7 @@
 package scanner
 
 import (
-	"github.com/dywoq/dywoqgame/interpreter/token"
+	"github.com/dywoq/dywoqlang/token"
 )
 
 type Reader interface {
@@ -48,7 +48,7 @@ type Slicer interface {
 }
 
 type EofChecker interface {
-	// Eof reports whether the end of file (EOF) is reached by the scanner.	
+	// Eof reports whether the end of file (EOF) is reached by the scanner.
 	Eof() bool
 }
 

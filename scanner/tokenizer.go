@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"unicode"
 
-	"github.com/dywoq/dywoqgame/interpreter/token"
+	"github.com/dywoq/dywoqlang/token"
 )
 
 // Tokenizer is a alias for the functions,

@@ -3,7 +3,7 @@ package parser
 import (
 	"slices"
 
-	"github.com/dywoq/dywoqgame/interpreter/token"
+	"github.com/dywoq/dywoqlang/token"
 )
 
 // Parser is responsible parsing tokens into the AST nodes.

@@ -3,7 +3,7 @@ package token_test
 import (
 	"testing"
 
-	"github.com/dywoq/dywoqgame/interpreter/token"
+	"github.com/dywoq/dywoqlang/token"
 )
 
 func TestIsIdentifier(t *testing.T) {

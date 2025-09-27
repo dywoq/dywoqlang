@@ -1,6 +1,6 @@
 package parser
 
-import "github.com/dywoq/dywoqgame/interpreter/token"
+import "github.com/dywoq/dywoqlang/token"
 
 type Reader interface {
 	// Current returns the current token.

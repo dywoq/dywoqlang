@@ -3,7 +3,7 @@ package parser
 import (
 	"encoding/json"
 
-	"github.com/dywoq/dywoqgame/interpreter/token"
+	"github.com/dywoq/dywoqlang/token"
 )
 
 type ModuleStatementType string

@@ -3,7 +3,7 @@ package parser
 import (
 	"errors"
 
-	"github.com/dywoq/dywoqgame/interpreter/token"
+	"github.com/dywoq/dywoqlang/token"
 )
 
 // MiniParser is for parsing tokens into AST nodes.
@@ -42,7 +42,6 @@ func ParseInstruction(c Context, t *token.Token) (Node, error) {
 		Arguments:  args,
 	}, nil
 }
-
 
 // ParseModuleStatement parses the module token into the AST node.
 func ParseModuleStatement(c Context, t *token.Token) (Node, error) {

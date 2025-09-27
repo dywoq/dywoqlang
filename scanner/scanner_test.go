@@ -3,8 +3,8 @@ package scanner_test
 import (
 	"testing"
 
-	"github.com/dywoq/dywoqgame/interpreter/scanner"
-	"github.com/dywoq/dywoqgame/interpreter/token"
+	"github.com/dywoq/dywoqlang/scanner"
+	"github.com/dywoq/dywoqlang/token"
 )
 
 func TestScannerScan(t *testing.T) {
