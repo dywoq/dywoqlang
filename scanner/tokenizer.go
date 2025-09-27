@@ -200,3 +200,27 @@ func TokenizeBaseInstruction(c Context, r rune) (*token.Token, error) {
 
 	return c.New(str, token.KIND_BASE_INSTRUCTION), nil
 }
+
+// TokenizeSpecial tokenizes the special words into the tokens.
+func TokenizeSpecial(c Context, r rune) (*token.Token, error) {
+	if !unicode.IsLetter(r) {
+		return nil, ErrNoMatch
+	}
+	start := c.Position().Position
+
+	for unicode.IsLetter(c.Current()) {
+		c.Advance(1)
+	}
+
+	str, err := c.Slice(start, c.Position().Position)
+	if err != nil {
+		return nil, err
+	}
+
+	if !token.Special.Is(str) {
+		c.Position().Position = start
+		return nil, ErrNoMatch
+	}
+
+	return c.New(str, token.KIND_SPECIAL), nil
+}

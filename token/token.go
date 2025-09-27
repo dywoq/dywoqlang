@@ -31,6 +31,7 @@ const (
 	KIND_INTEGER          Kind = "integer"
 	KIND_STRING           Kind = "string"
 	KIND_BASE_INSTRUCTION Kind = "base_instruction"
+	KIND_SPECIAL          Kind = "special"
 	KIND_EOF              Kind = "eof"
 )
 
@@ -39,8 +40,11 @@ var (
 		"export":  KIND_KEYWORD,
 		"module":  KIND_KEYWORD,
 		"import":  KIND_KEYWORD,
-		"nil":     KIND_KEYWORD,
 		"declare": KIND_KEYWORD,
+	}
+
+	Special = Map{
+		"nil": KIND_SPECIAL,
 	}
 
 	Separators = Map{

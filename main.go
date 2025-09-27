@@ -6,6 +6,7 @@ import (
 
 	"github.com/dywoq/dywoqlang/parser"
 	"github.com/dywoq/dywoqlang/scanner"
+	"github.com/dywoq/dywoqlang/token"
 )
 
 func main() {
@@ -18,6 +19,10 @@ func main() {
 	tokens, err := s.Scan(string(content))
 	if err != nil {
 		panic(err)
+	}
+
+	for _, tok := range tokens {
+		fmt.Printf("tok: %v\n", token.String(tok))
 	}
 
 	p := parser.NewParser()

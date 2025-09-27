@@ -66,6 +66,10 @@ func ParseModuleStatement(c Context, t *token.Token) (Node, error) {
 		return nil, errors.New("expected a identifier after the module declaration")
 	}
 
+	if moduleType == ModuleStatementDeclaration {
+		c.SetModule(identifier.Literal)
+	}
+
 	return ModuleStatement{
 		Identifier: identifier.Literal,
 		Type:       moduleType,

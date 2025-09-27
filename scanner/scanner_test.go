@@ -23,7 +23,6 @@ func TestScannerScan(t *testing.T) {
 		{"export", token.KIND_KEYWORD},
 		{"module", token.KIND_KEYWORD},
 		{"import", token.KIND_KEYWORD},
-		{"nil", token.KIND_KEYWORD},
 		{"declare", token.KIND_KEYWORD},
 
 		// tokenizing separators
@@ -60,6 +59,9 @@ func TestScannerScan(t *testing.T) {
 		{"div", token.KIND_BASE_INSTRUCTION},
 		{"write", token.KIND_BASE_INSTRUCTION},
 		{"store", token.KIND_BASE_INSTRUCTION},
+
+		// tokenizing special
+		{"nil", token.KIND_SPECIAL},
 	}
 
 	for _, test := range tests {

@@ -30,6 +30,7 @@ func (s *Scanner) setup() {
 		TokenizeKeyword,
 		TokenizeSeparator,
 		TokenizeBaseInstruction,
+		TokenizeSpecial,
 		TokenizeIdentifier,
 		TokenizeNumber,
 		TokenizeString,
