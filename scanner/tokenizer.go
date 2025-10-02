@@ -2,6 +2,7 @@ package scanner
 
 import (
 	"errors"
+	"fmt"
 	"unicode"
 
 	"github.com/dywoq/dywoqlang/token"
@@ -76,4 +77,56 @@ func TokenizeNumber(c Context) (*token.Token, error) {
 		return nil, err
 	}
 	return c.New(substr, token.Float), nil
+}
+
+// TokenizeString tokenizes a string.
+//
+// If the string was unterminated, the tokenizer
+// returns an error.
+//
+// Returns an error if scanner reached End Of File (EOF).
+func TokenizeString(c Context) (*token.Token, error) {
+	if c.Eof() {
+		return nil, ErrEof
+	}
+	if r, _ := c.Current(); r != '"' {
+		return nil, ErrNoMatch
+	}
+
+	err := c.Advance(1)
+	if err != nil {
+		return nil, err
+	}
+
+	start := c.Position().Position
+	for {
+		if c.Eof() {
+			return nil, fmt.Errorf("unterminated string at line %d, column %d", c.Position().Line, c.Position().Column)
+		}
+
+		r, _ := c.Current()
+		if r == '\n' {
+			return nil, fmt.Errorf("unterminated string at line %d, column %d", c.Position().Line, c.Position().Column)
+		}
+
+		if r == '"' {
+			break
+		}
+
+		if err := c.Advance(1); err != nil {
+			return nil, err
+		}
+	}
+
+	substr, err := c.Slice(start, c.Position().Position)
+	if err != nil {
+		return nil, err
+	}
+
+	err = c.Advance(1)
+	if err != nil {
+		return nil, err
+	}
+
+	return c.New(substr, token.String), nil
 }

@@ -10,7 +10,7 @@ import (
 func main() {
 	s := scanner.New()
 
-	tokens, err := s.Scan("122")
+	tokens, err := s.Scan(`"Hi!" 23.232`)
 	if err != nil {
 		panic(err)
 	}

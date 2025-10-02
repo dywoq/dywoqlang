@@ -2,6 +2,7 @@ package scanner
 
 import (
 	"errors"
+	"unicode"
 
 	"github.com/dywoq/dywoqlang/token"
 )
@@ -130,6 +131,10 @@ func (s *Scanner) Scan(input string) ([]*token.Token, error) {
 
 	var result []*token.Token
 	for !s.Eof() {
+		err := s.skipWhitespace()
+		if err != nil {
+			return nil, err
+		}
 		t, err := s.tokenize()
 		if err != nil {
 			return nil, err
@@ -139,6 +144,21 @@ func (s *Scanner) Scan(input string) ([]*token.Token, error) {
 
 	result = append(result, token.NewToken("", token.Eof, s.position))
 	return result, nil
+}
+
+func (s *Scanner) skipWhitespace() error {
+	for {
+		if s.Eof() {
+			return nil
+		}
+		r, _ := s.Current()
+		if !unicode.IsSpace(r) {
+			return nil
+		}
+		if err := s.Advance(1); err != nil {
+			return err
+		}
+	}
 }
 
 func (s *Scanner) reset(input string) {
@@ -166,6 +186,7 @@ func (s *Scanner) setup() {
 	if !s.setupOn {
 		s.tokenizers = []TokenizerFunc{
 			TokenizeNumber,
+			TokenizeString,
 		}
 		s.setupOn = true
 	}
