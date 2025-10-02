@@ -6,7 +6,6 @@ type Reader interface {
 	// Peek returns the future character.
 	//
 	// Returns an error if the scanner reached EOF,
-	// the current position is out of the input.
 	// or the current position+1 will make the scanner position out of the input.
 	Peek() (rune, error)
 
@@ -30,12 +29,18 @@ type Creator interface {
 	New(literal string, kind token.Kind) *token.Token
 }
 
+type EofChecker interface {
+	// Eof returns true if scanner reached End Of File (EOF).
+	Eof() bool
+}
+
 // Context is an interface that allows you to work with scanners directly,
 // such as reading character, getting position and create tokens more simple and comfortably.
 type Context interface {
 	Reader
 	Tracker
 	Creator
+	EofChecker
 }
 
 // Peek uses Reader.Peek method to peek the future character.
@@ -46,4 +51,9 @@ func Peek(r Reader) (rune, error) {
 // Current uses Reader.Current method to see the current character.
 func Current(r Reader) (rune, error) {
 	return r.Current()
+}
+
+// Eof uses EofChecker.Eof method to check if scanner reached EOF.
+func Eof(e EofChecker) bool {
+	return e.Eof()
 }
