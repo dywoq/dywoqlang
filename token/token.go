@@ -22,61 +22,69 @@ type Token struct {
 }
 
 const (
-	KIND_ILLEGAL          Kind = "illegal"
-	KIND_KEYWORD          Kind = "keyword"
-	KIND_TYPE             Kind = "type"
-	KIND_SEPARATOR        Kind = "separator"
-	KIND_IDENTIFIER       Kind = "identifier"
-	KIND_FLOAT            Kind = "float"
-	KIND_INTEGER          Kind = "integer"
-	KIND_STRING           Kind = "string"
-	KIND_BASE_INSTRUCTION Kind = "base_instruction"
-	KIND_SPECIAL          Kind = "special"
-	KIND_EOF              Kind = "eof"
+	Illegal         Kind = "illegal"
+	Keyword         Kind = "keyword"
+	Type            Kind = "type"
+	Separator       Kind = "separator"
+	Identifier      Kind = "identifier"
+	Float           Kind = "float"
+	Integer         Kind = "integer"
+	String          Kind = "string"
+	BaseInstruction Kind = "base_instruction"
+	Special         Kind = "special"
+	BinaryOperator  Kind = "binary_operator"
+	Eof             Kind = "eof"
 )
 
 var (
-	Keywords = Map{
-		"export":  KIND_KEYWORD,
-		"module":  KIND_KEYWORD,
-		"import":  KIND_KEYWORD,
-		"declare": KIND_KEYWORD,
+	KeywordsMap = Map{
+		"export":  Keyword,
+		"module":  Keyword,
+		"import":  Keyword,
+		"declare": Keyword,
 	}
 
-	Special = Map{
-		"nil": KIND_SPECIAL,
+	SpecialMap = Map{
+		"nil": Special,
 	}
 
-	Separators = Map{
-		",": KIND_SEPARATOR,
-		"{": KIND_SEPARATOR,
-		"}": KIND_SEPARATOR,
-		"(": KIND_SEPARATOR,
-		")": KIND_SEPARATOR,
-		";": KIND_SEPARATOR,
+	SeparatorsMap = Map{
+		",": Separator,
+		"{": Separator,
+		"}": Separator,
+		"(": Separator,
+		")": Separator,
+		";": Separator,
 	}
 
-	Types = Map{
-		"str":  KIND_TYPE,
-		"bool": KIND_TYPE,
-		"i8":   KIND_TYPE,
-		"i16":  KIND_TYPE,
-		"i32":  KIND_TYPE,
-		"i64":  KIND_TYPE,
-		"u8":   KIND_TYPE,
-		"u16":  KIND_TYPE,
-		"u32":  KIND_TYPE,
-		"u64":  KIND_TYPE,
-		"void": KIND_TYPE,
+	TypesMap = Map{
+		"str":  Type,
+		"bool": Type,
+		"i8":   Type,
+		"i16":  Type,
+		"i32":  Type,
+		"i64":  Type,
+		"u8":   Type,
+		"u16":  Type,
+		"u32":  Type,
+		"u64":  Type,
+		"void": Type,
 	}
 
-	BaseInstructions = Map{
-		"add":   KIND_BASE_INSTRUCTION,
-		"sub":   KIND_BASE_INSTRUCTION,
-		"mul":   KIND_BASE_INSTRUCTION,
-		"div":   KIND_BASE_INSTRUCTION,
-		"write": KIND_BASE_INSTRUCTION,
-		"store": KIND_BASE_INSTRUCTION,
+	BaseInstructionsMap = Map{
+		"add":   BaseInstruction,
+		"sub":   BaseInstruction,
+		"mul":   BaseInstruction,
+		"div":   BaseInstruction,
+		"write": BaseInstruction,
+		"store": BaseInstruction,
+	}
+
+	BinaryOperatorsMap = Map{
+		"+": BinaryOperator,
+		"-": BinaryOperator,
+		"/": BinaryOperator,
+		"*": BinaryOperator,
 	}
 )
 
@@ -85,7 +93,7 @@ var (
 // contain hash, left and right paren, slash or start with the digit.
 func IsIdentifier(value string) bool {
 	switch {
-	case Keywords.Is(value), Separators.Is(value), Types.Is(value):
+	case KeywordsMap.Is(value), SeparatorsMap.Is(value), TypesMap.Is(value):
 		return false
 	}
 	for i, r := range value {
