@@ -34,6 +34,14 @@ type EofChecker interface {
 	Eof() bool
 }
 
+type Slicer interface {
+	// Slice takes a substring from the input surrounded by start and end.
+	//
+	// Returns an error if start is negative, start is higher than end,
+	// or end is higher than the input.
+	Slice(start, end int) (string, error)
+}
+
 // Context is an interface that allows you to work with scanners directly,
 // such as reading character, getting position and create tokens more simple and comfortably.
 type Context interface {
@@ -41,6 +49,7 @@ type Context interface {
 	Tracker
 	Creator
 	EofChecker
+	Slicer
 }
 
 // Peek uses Reader.Peek method to peek the future character.
@@ -56,4 +65,9 @@ func Current(r Reader) (rune, error) {
 // Eof uses EofChecker.Eof method to check if scanner reached EOF.
 func Eof(e EofChecker) bool {
 	return e.Eof()
+}
+
+// Slice uses Slicer.Slice method to slice the scanner input.
+func Slice(s Slicer, start, end int) (string, error) {
+	return s.Slice(start, end)
 }
