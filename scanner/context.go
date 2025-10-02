@@ -42,6 +42,19 @@ type Slicer interface {
 	Slice(start, end int) (string, error)
 }
 
+type Advancer interface {
+	// Advance advances to the next position by n
+	//
+	// If newline character is met,
+	// scanner increases line and column beside the current position.
+	//
+	// Returns an error if scanner reached End Of File (EOF),
+	// or the current position+n will make the position out of the input.
+	//
+	// Does nothing if n is zero.
+	Advance(n int) error
+}
+
 // Context is an interface that allows you to work with scanners directly,
 // such as reading character, getting position and create tokens more simple and comfortably.
 type Context interface {
@@ -50,6 +63,7 @@ type Context interface {
 	Creator
 	EofChecker
 	Slicer
+	Advancer
 }
 
 // Peek uses Reader.Peek method to peek the future character.
@@ -70,4 +84,9 @@ func Eof(e EofChecker) bool {
 // Slice uses Slicer.Slice method to slice the scanner input.
 func Slice(s Slicer, start, end int) (string, error) {
 	return s.Slice(start, end)
+}
+
+// Advance uses Advancer.Advance method to advance to the next position by n.
+func Advance(a Advancer, n int) error {
+	return a.Advance(n)
 }
