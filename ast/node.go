@@ -22,8 +22,8 @@ type Declaration struct {
 }
 
 type FunctionParameter struct {
-	Identifier string     `json:"identifier"`
-	Kind       token.Kind `json:"type"`
+	Identifier string `json:"identifier"`
+	Kind       string `json:"kind"`
 }
 
 type FunctionValue struct {
@@ -34,11 +34,6 @@ type FunctionValue struct {
 type Value struct {
 	Value string     `json:"value"`
 	Kind  token.Kind `json:"kind"`
-}
-
-type BinaryExpression struct {
-	Operator string `json:"operator"`
-	Children []Node `json:"children"`
 }
 
 type InstructionCall struct {
@@ -67,6 +62,5 @@ func (Declaration) Node()             {}
 func (FunctionParameter) Node()       {}
 func (FunctionValue) Node()           {}
 func (Value) Node()                   {}
-func (BinaryExpression) Node()        {}
 func (InstructionCall) Node()         {}
 func (InstructionCallArgument) Node() {}

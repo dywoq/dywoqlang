@@ -185,8 +185,8 @@ func (p *Parser) parse() (ast.Node, error) {
 func (p *Parser) setup() {
 	if !p.setupOn {
 		p.parsers = []MiniFunc{
-			ParseInstructionCall,
 			ParseDeclaration,
+			ParseInstructionCall,
 		}
 		p.setupOn = true
 	}

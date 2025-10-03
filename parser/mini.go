@@ -56,7 +56,7 @@ loop:
 
 	identifier, _ := c.Expect(token.Identifier)
 	tType, _ := c.Expect(token.Type)
-	value, err := ParseValue(c, declared)
+	value, err := ParseValue(c, declared, linked)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +73,7 @@ loop:
 	}, nil
 }
 
-func ParseValue(c Context, declared bool) (ast.Node, error) {
+func ParseValue(c Context, declared, linked bool) (ast.Node, error) {
 	t, err := c.Current()
 	if err != nil {
 		return nil, err
@@ -91,7 +91,6 @@ func ParseValue(c Context, declared bool) (ast.Node, error) {
 	case t.Literal == "(":
 		_, _ = c.ExpectLiteral("(")
 		params := []ast.FunctionParameter{}
-
 		for !c.Eof() {
 			next, _ := c.Current()
 			if next.Literal == ")" {
@@ -103,21 +102,33 @@ func ParseValue(c Context, declared bool) (ast.Node, error) {
 
 			params = append(params, ast.FunctionParameter{
 				Identifier: ident.Literal,
-				Kind:       typ.Kind,
+				Kind:       typ.Literal,
 			})
 
 			next, _ = c.Current()
-			if next == nil {
-				return nil, c.Error("next character is nil")
-			}
-
 			if next.Literal == "," {
 				_, _ = c.ExpectLiteral(",")
 			}
 		}
-
 		_, _ = c.ExpectLiteral(")")
-		return ast.FunctionValue{Parameters: params}, nil
+		next, err := c.Current()
+		if err == nil && next.Literal == "{" {
+			if declared || linked {
+				return nil, c.Errorf("declared or linked functions cannot have a body")
+			}
+			body, err := ParseBody(c)
+			if err != nil {
+				return nil, err
+			}
+			return ast.FunctionValue{
+				Parameters: params,
+				Body:       body,
+			}, nil
+		}
+		return ast.FunctionValue{
+			Parameters: params,
+			Body:       nil,
+		}, nil
 	}
 
 	return nil, c.Errorf("unknown value type: %v", t.Literal)
@@ -131,7 +142,7 @@ func ParseInstructionCall(c Context) (ast.Node, error) {
 
 	t, _ := c.Current()
 	switch t.Kind {
-	case token.Separator: // "["
+	case token.Separator:
 		_, _ = c.ExpectLiteral("[")
 		ident, _ := c.Expect(token.Identifier)
 		_, _ = c.ExpectLiteral("]")
@@ -142,7 +153,6 @@ func ParseInstructionCall(c Context) (ast.Node, error) {
 		name = ident.Literal
 	}
 
-	// parse arguments normally
 	var args []ast.InstructionCallArgument
 	for {
 		if c.Eof() {
@@ -158,7 +168,7 @@ func ParseInstructionCall(c Context) (ast.Node, error) {
 			continue
 		}
 
-		val, err := ParseValue(c, false) 
+		val, err := ParseValue(c, false, false)
 		if err != nil {
 			return nil, err
 		}
@@ -173,4 +183,38 @@ func ParseInstructionCall(c Context) (ast.Node, error) {
 		IsUser:    isUser,
 		Arguments: args,
 	}, nil
+}
+
+func ParseStatement(c Context) (ast.Node, error) {
+	t, _ := c.Current()
+
+	switch t.Kind {
+	case token.BaseInstruction:
+		return ParseInstructionCall(c)
+	case token.Separator:
+		return ParseInstructionCall(c)
+	default:
+		return nil, c.Errorf("unexpected token in statement: %v", t.Literal)
+	}
+}
+
+func ParseBody(c Context) ([]ast.Node, error) {
+	_, _ = c.ExpectLiteral("{")
+	var statements []ast.Node
+
+	for !c.Eof() {
+		t, _ := c.Current()
+		if t.Literal == "}" {
+			break
+		}
+
+		stmt, err := ParseStatement(c)
+		if err != nil {
+			return nil, err
+		}
+		statements = append(statements, stmt)
+	}
+
+	_, _ = c.ExpectLiteral("}")
+	return statements, nil
 }

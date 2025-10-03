@@ -1,2 +1,7 @@
-mov s, 23;
-[instruct] 2, 3;
+main i32 (x i32, y i32) {
+	mov x, 223;
+	[ret] 10, 20;
+}
+
+link("runtime.main")
+__runtime_main i32 (x i32, y i32)
