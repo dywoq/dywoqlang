@@ -303,7 +303,12 @@ func TokenizeBinaryOperator(c Context) (*token.Token, error) {
 	return c.New(string(r), token.BinaryOperator), nil
 }
 
-// TokenizeIdentifier tokenizes binary operators.
+// TokenizeIdentifier tokenizes identifiers.
+//
+// Returns an error if the scanner reached End Of File (EOF).
+//
+// If it doesn't match, the function returns ErrNoMatch
+// and advances to the initial position.
 func TokenizeIdentifier(c Context) (*token.Token, error) {
 	if c.Eof() {
 		return nil, ErrEof
