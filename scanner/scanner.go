@@ -20,7 +20,13 @@ type Scanner struct {
 
 // New returns a new pointer to Scanner.
 func New(debug bool) *Scanner {
-	return &Scanner{input: "", position: &token.Position{Line: 1, Column: 1}, setupOn: false, debug: debug, tokenizers: make([]TokenizerFunc, 0)}
+	return &Scanner{
+		input: "",
+		position: &token.Position{Line: 1, Column: 1},
+		setupOn: false,
+		debug: debug,
+		tokenizers: make([]TokenizerFunc, 0),
+	}
 }
 
 // Advance advances to the next position by n
@@ -47,11 +53,11 @@ func (s *Scanner) Advance(n int) error {
 		if s.Eof() {
 			return nil
 		}
-		r := rune(s.input[s.position.Position]) // Get character at current pos
+		r := rune(s.input[s.position.Position])
 		s.outputf("advancing past %s\n", string(r))
 		s.position.Position++
 
-		if r == '\n' { // Check the character we just advanced past
+		if r == '\n' { 
 			s.outputf("entering new line...\n")
 			s.position.Line++
 			s.position.Column = 1
@@ -208,6 +214,7 @@ func (s *Scanner) tokenize() (*token.Token, error) {
 func (s *Scanner) setup() {
 	if !s.setupOn {
 		s.tokenizers = []TokenizerFunc{
+			TokenizeTypes,
 			TokenizeBaseInstruction,
 			TokenizeIdentifier,
 			TokenizeSpecial,

@@ -1,0 +1,1 @@
+link("main.main") export declare __user_main str (x str, y str)

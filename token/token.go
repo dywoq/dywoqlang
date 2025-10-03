@@ -42,6 +42,7 @@ var (
 		"module":  Keyword,
 		"import":  Keyword,
 		"declare": Keyword,
+		"link":    Keyword,
 	}
 
 	SpecialMap = Map{

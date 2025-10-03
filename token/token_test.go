@@ -28,6 +28,7 @@ func TestIsIdentifier(t *testing.T) {
 		{"module", false},
 		{"nil", false},
 		{"declare", false},
+		{"link", false},
 
 		{"}", false},
 		{"{", false},

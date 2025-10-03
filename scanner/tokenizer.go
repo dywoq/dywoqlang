@@ -345,3 +345,51 @@ func TokenizeIdentifier(c Context) (*token.Token, error) {
 
 	return c.New(substr, token.Identifier), nil
 }
+
+// TokenizeTypes tokenizes types.
+//
+// Returns an error if the scanner reached End Of File (EOF).
+//
+// If it doesn't match, the function returns ErrNoMatch
+// and advances to the initial position.
+func TokenizeTypes(c Context) (*token.Token, error) {
+	if c.Eof() {
+		return nil, ErrEof
+	}
+
+	r, _ := c.Current()
+	if !unicode.IsLetter(r) {
+		return nil, ErrNoMatch
+	}
+
+	start := c.Position().Position
+	for {
+		err := c.Advance(1)
+		if err != nil {
+			return nil, err
+		}
+
+		if c.Eof() {
+			break
+		}
+
+		r, _ := c.Current()
+		if !unicode.IsLetter(r) {
+			break
+		}
+	}
+
+	substr, err := c.Slice(start, c.Position().Position)
+	if err != nil {
+		return nil, err
+	}
+
+	switch substr {
+	case "str", "void", "bool":
+		c.Advance(1)
+		return c.New(substr, token.Type), nil
+	}
+
+	c.Position().Position = start
+	return nil, ErrNoMatch
+}
