@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/dywoq/dywoqlang/ast"
 	"log"
+	"slices"
 
 	"github.com/dywoq/dywoqlang/token"
 )
@@ -65,16 +66,60 @@ func (p *Parser) Position() int {
 	return p.pos
 }
 
+func (p *Parser) Expect(kind token.Kind) (*token.Token, error) {
+	if p.Eof() {
+		return nil, ErrEof
+	}
+	tok := p.tokens[p.pos]
+	if tok.Kind != kind {
+		return nil, p.Errorf("expected token kind %v, got %v", kind, tok.Kind)
+	}
+	p.pos++
+	return tok, nil
+}
+
+func (p *Parser) ExpectLiteral(lit string) (*token.Token, error) {
+	if p.Eof() {
+		return nil, ErrEof
+	}
+	tok := p.tokens[p.pos]
+	if tok.Literal != lit {
+		return nil, p.Errorf("expected literal '%s', got '%s'", lit, tok.Literal)
+	}
+	p.pos++
+	return tok, nil
+}
+
+func (p *Parser) ExpectMultiple(kinds ...token.Kind) (*token.Token, error) {
+	if p.Eof() {
+		return nil, ErrEof
+	}
+	tok := p.tokens[p.pos]
+	if !slices.Contains(kinds, tok.Kind) {
+		return nil, p.Errorf("expected at least one token kind (%v), got %v", kinds, tok.Kind)
+	}
+	p.pos++
+	return tok, nil
+}
+
 func (p *Parser) Error(v ...any) error {
 	t, _ := p.Current()
-	formatted := fmt.Sprintf("%v (source is %d, token position: %v)", v, p.pos, *t.Position)
+	pos := &token.Position{}
+	if t != nil {
+		pos = t.Position
+	}
+	formatted := fmt.Sprintf("%v (source is %d, token position: %v)", v, p.pos, pos)
 	return errors.New(formatted)
 }
 
 func (p *Parser) Errorf(format string, v ...any) error {
 	t, _ := p.Current()
+	pos := &token.Position{}
+	if t != nil {
+		pos = t.Position
+	}
 	custom := fmt.Sprintf(format, v...)
-	formatted := fmt.Sprintf("%s (source is %d, token position: %v)", custom, p.pos, *t.Position)
+	formatted := fmt.Sprintf("%s (source is %d, token position: %v)", custom, p.pos, pos)
 	return errors.New(formatted)
 }
 

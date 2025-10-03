@@ -386,10 +386,78 @@ func TokenizeTypes(c Context) (*token.Token, error) {
 
 	switch substr {
 	case "str", "void", "bool":
-		c.Advance(1)
+		return c.New(substr, token.Type), nil
+
+	case "i", "u":
+		for {
+			c.Advance(1)
+			if c.Eof() {
+				break
+			}
+			r, _ = c.Current()
+			if !unicode.IsNumber(r) {
+				break
+			}
+		}
+
+		substr, err = c.Slice(start, c.Position().Position)
+		if err != nil {
+			return nil, err
+		}
+
+		if !token.TypesMap.Is(substr) {
+			return nil, fmt.Errorf("wrong numeric type: %s", substr)
+		}
+
 		return c.New(substr, token.Type), nil
 	}
 
 	c.Position().Position = start
 	return nil, ErrNoMatch
+}
+
+// TokenizeTypes tokenizes bool constants.
+//
+// Returns an error if the scanner reached End Of File (EOF).
+//
+// If it doesn't match, the function returns ErrNoMatch
+// and advances to the initial position.
+func TokenizeBoolConstant(c Context) (*token.Token, error) {
+	if c.Eof() {
+		return nil, ErrEof
+	}
+
+	r, _ := c.Current()
+	if !unicode.IsLetter(r) {
+		return nil, ErrNoMatch
+	}
+
+	start := c.Position().Position
+	for {
+		err := c.Advance(1)
+		if err != nil {
+			return nil, err
+		}
+
+		if c.Eof() {
+			break
+		}
+
+		r, _ := c.Current()
+		if !unicode.IsLetter(r) {
+			break
+		}
+	}
+
+	substr, err := c.Slice(start, c.Position().Position)
+	if err != nil {
+		return nil, err
+	}
+
+	if !token.BoolConstantsMap.Is(substr) {
+		c.Position().Position = start
+		return nil, ErrNoMatch
+	}
+
+	return c.New(substr, token.BoolConstant), nil
 }

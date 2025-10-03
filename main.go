@@ -11,23 +11,27 @@ import (
 )
 
 func main() {
+	debug := false
+
 	bytes, err := os.ReadFile("main.dl")
 	if err != nil {
 		panic(err)
 	}
 
-	s := scanner.New(true)
+	s := scanner.New(debug)
 
 	tokens, err := s.Scan(string(bytes))
 	if err != nil {
 		panic(err)
 	}
 
-	for _, tok := range tokens {
-		fmt.Println(token.ToString(tok))
+	if debug {
+		for _, tok := range tokens {
+			fmt.Println(token.ToString(tok))
+		}
 	}
 
-	p := parser.New(true)
+	p := parser.New(debug)
 
 	nodes, err := p.Parse(tokens)
 	if err != nil {

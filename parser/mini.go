@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"strconv"
+
 	"github.com/dywoq/dywoqlang/ast"
 	"github.com/dywoq/dywoqlang/token"
 )
@@ -9,125 +11,110 @@ import (
 type MiniFunc func(c Context) (ast.Node, error)
 
 func ParseDeclaration(c Context) (ast.Node, error) {
-	if c.Eof() {
-		return nil, ErrEof
-	}
-
 	var (
-		exported, declared, linked bool
-		linkedFrom                 string
+		exported, declared, linked, canBeLinked bool
+		linkedFrom                              string
 	)
-
 loop:
-	for {
-		t, err := c.Current()
-		if err != nil {
-			return nil, err
-		}
-
+	for !c.Eof() {
+		t, _ := c.Current()
 		switch t.Literal {
 		case "link":
-			c.Advance(1)
-			if t, _ = c.Current(); t.Literal != "(" {
-				return nil, c.Error("expected left paren")
+			_, _ = c.ExpectLiteral("link")
+			_, _ = c.ExpectLiteral("(")
+			v, err := c.ExpectMultiple(token.String, token.BoolConstant)
+			if err != nil {
+				return nil, err 
 			}
 
-			c.Advance(1)
-			if t, _ = c.Current(); t.Kind != token.String {
-				return nil, c.Error("expected string")
-			} else {
-				linkedFrom = t.Literal
+			if v.Kind == token.BoolConstant {
+				canBeLinked, _ = strconv.ParseBool(v.Literal)
 			}
 
-			c.Advance(1)
-			if t, _ = c.Current(); t.Literal != ")" {
-				return nil, c.Error("expected right paren")
+			if v.Kind == token.String {
+				linkedFrom = v.Literal
+				linked = true
 			}
 
-			c.Advance(1)
-
-			linked = true
+			_, _ = c.ExpectLiteral(")")
 
 		case "export":
+			if !canBeLinked {
+				return nil, c.Error("symbols that can be linked can't be exported")
+			}
+			_, _ = c.ExpectLiteral("export")
 			exported = true
-			c.Advance(1)
 
 		case "declare":
+			_, _ = c.ExpectLiteral("declare")
 			declared = true
-			c.Advance(1)
 
 		default:
 			break loop
 		}
 	}
 
-	identifier, _ := c.Current()
-	if identifier.Kind != token.Identifier {
-		return nil, c.Error("expected an identifier")
-	}
-	c.Advance(1)
-
-	tType, _ := c.Current()
-	if tType.Kind != token.Type {
-		return nil, c.Error("expected a type")
-	}
-	c.Advance(1)
-
+	identifier, _ := c.Expect(token.Identifier)
+	tType, _ := c.Expect(token.Type)
 	value, err := ParseValue(c, declared)
 	if err != nil {
 		return nil, err
 	}
 
 	return ast.Declaration{
-		Name:       identifier.Literal,
-		Kind:       tType.Kind,
-		Exported:   exported,
-		Declared:   declared,
-		Linked:     linked,
-		LinkedFrom: linkedFrom,
-		Value:      value,
+		Name:        identifier.Literal,
+		Kind:        tType.Literal,
+		Exported:    exported,
+		Declared:    declared,
+		Linked:      linked,
+		LinkedFrom:  linkedFrom,
+		CanBeLinked: canBeLinked,
+		Value:       value,
 	}, nil
 }
 
 func ParseValue(c Context, declared bool) (ast.Node, error) {
-	t, _ := c.Current()
+	t, err := c.Current()
+	if err != nil {
+		return nil, err
+	}
+
 	switch {
-	case t.Kind == token.Integer,
-		t.Kind == token.Float,
-		t.Kind == token.String:
+	case t.Kind == token.Integer, t.Kind == token.Float, t.Kind == token.String:
+		_, _ = c.Expect(t.Kind)
 		return ast.Value{Value: t.Literal, Kind: t.Kind}, nil
+
 	case t.Literal == "(":
-		c.Advance(1)
-
+		_, _ = c.ExpectLiteral("(")
 		params := []ast.FunctionParameter{}
-		for {
-			if c.Eof() {
+
+		for !c.Eof() {
+			next, _ := c.Current()
+			if next.Literal == ")" {
 				break
 			}
-			if r, _ := c.Current(); r.Literal == ")" {
-				break
-			}
-			identifier, _ := c.Current()
-			if identifier.Kind != token.Identifier {
-				return nil, c.Error("expected identifier in function parameter")
-			}
-			c.Advance(1)
 
-			tType, _ := c.Current()
-			if tType.Kind != token.Type {
-				return nil, c.Error("expected type in function parameter")
+			ident, _ := c.Expect(token.Identifier)
+			typ, _ := c.Expect(token.Type)
+
+			params = append(params, ast.FunctionParameter{
+				Identifier: ident.Literal,
+				Kind:       typ.Kind,
+			})
+
+			next, _ = c.Current()
+			if next == nil {
+				return nil, c.Error("next character is nil")
 			}
-			c.Advance(1)
 
-			params = append(params, ast.FunctionParameter{Identifier: identifier.Literal, Kind: tType.Kind})
-
-			if r, _ := c.Current(); r.Literal == "," {
-				continue
+			if next.Literal == "," {
+				_, _ = c.ExpectLiteral(",")
 			}
 		}
 
+		_, _ = c.ExpectLiteral(")")
 		return ast.FunctionValue{Parameters: params}, nil
 	}
 
-	return nil, c.Error("unknown value type")
+	return nil, c.Errorf("unknown value type: %v", t.Literal)
 }

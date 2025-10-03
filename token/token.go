@@ -33,6 +33,7 @@ const (
 	BaseInstruction Kind = "base_instruction"
 	Special         Kind = "special"
 	BinaryOperator  Kind = "binary_operator"
+	BoolConstant    Kind = "bool_constant"
 	Eof             Kind = "eof"
 )
 
@@ -85,6 +86,11 @@ var (
 		"-": BinaryOperator,
 		"/": BinaryOperator,
 		"*": BinaryOperator,
+	}
+
+	BoolConstantsMap = Map{
+		"true":  BoolConstant,
+		"false": BoolConstant,
 	}
 )
 

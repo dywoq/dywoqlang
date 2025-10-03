@@ -21,10 +21,10 @@ type Scanner struct {
 // New returns a new pointer to Scanner.
 func New(debug bool) *Scanner {
 	return &Scanner{
-		input: "",
-		position: &token.Position{Line: 1, Column: 1},
-		setupOn: false,
-		debug: debug,
+		input:      "",
+		position:   &token.Position{Line: 1, Column: 1},
+		setupOn:    false,
+		debug:      debug,
 		tokenizers: make([]TokenizerFunc, 0),
 	}
 }
@@ -57,7 +57,7 @@ func (s *Scanner) Advance(n int) error {
 		s.outputf("advancing past %s\n", string(r))
 		s.position.Position++
 
-		if r == '\n' { 
+		if r == '\n' {
 			s.outputf("entering new line...\n")
 			s.position.Line++
 			s.position.Column = 1
@@ -172,13 +172,20 @@ func (s *Scanner) skipWhitespace() error {
 		if s.Eof() {
 			return nil
 		}
-		r, _ := s.Current()
+
+		r, err := s.Current()
+		if err != nil {
+			return nil
+		}
+
 		if !unicode.IsSpace(r) {
 			return nil
 		}
+
 		s.outputf("skipping whitespace...\n")
+
 		if err := s.Advance(1); err != nil {
-			return err
+			return nil
 		}
 	}
 }
@@ -214,6 +221,7 @@ func (s *Scanner) tokenize() (*token.Token, error) {
 func (s *Scanner) setup() {
 	if !s.setupOn {
 		s.tokenizers = []TokenizerFunc{
+			TokenizeBoolConstant,
 			TokenizeTypes,
 			TokenizeBaseInstruction,
 			TokenizeIdentifier,

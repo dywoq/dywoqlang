@@ -1,1 +1,4 @@
-link("main.main") export declare __user_main str (x str, y str)
+link(false) 
+link("main.main") 
+declare 
+main i32 ()

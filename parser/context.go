@@ -46,10 +46,17 @@ type ErrorCreator interface {
 	Errorf(format string, v ...any) error
 }
 
+type Expecter interface {
+	Expect(kind token.Kind) (*token.Token, error)
+	ExpectLiteral(lit string) (*token.Token, error)
+	ExpectMultiple(kind ...token.Kind) (*token.Token, error) 
+}
+
 type Context interface {
 	Reader
 	Tracker
 	EofChecker
 	Advancer
 	ErrorCreator
+	Expecter
 }

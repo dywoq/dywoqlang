@@ -11,13 +11,14 @@ type Node interface {
 }
 
 type Declaration struct {
-	Name       string     `json:"name"`
-	Kind       token.Kind `json:"type"`
-	Exported   bool       `json:"exported"`
-	Declared   bool       `json:"declared"`
-	Linked     bool       `json:"linked"`
-	LinkedFrom string     `json:"linked_from"`
-	Value      Node       `json:"value"`
+	Name        string `json:"name"`
+	Kind        string `json:"kind"`
+	Exported    bool   `json:"exported"`
+	Declared    bool   `json:"declared"`
+	Linked      bool   `json:"linked"`
+	LinkedFrom  string `json:"linked_from"`
+	CanBeLinked bool   `json:"can_be_linked"`
+	Value       Node   `json:"value"`
 }
 
 type FunctionParameter struct {
@@ -54,5 +55,5 @@ func ToString(n Node) string {
 func (Declaration) Node()       {}
 func (FunctionParameter) Node() {}
 func (FunctionValue) Node()     {}
-func (Value) Node()     {}
+func (Value) Node()             {}
 func (BinaryExpression) Node()  {}
