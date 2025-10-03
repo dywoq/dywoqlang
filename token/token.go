@@ -55,6 +55,8 @@ var (
 		"(": Separator,
 		")": Separator,
 		";": Separator,
+		"[": Separator,
+		"]": Separator,
 	}
 
 	TypesMap = Map{
@@ -72,12 +74,9 @@ var (
 	}
 
 	BaseInstructionsMap = Map{
-		"add":   BaseInstruction,
-		"sub":   BaseInstruction,
-		"mul":   BaseInstruction,
-		"div":   BaseInstruction,
-		"write": BaseInstruction,
-		"store": BaseInstruction,
+		"stdout": BaseInstruction,
+		"stderr": BaseInstruction,
+		"mov":    BaseInstruction,
 	}
 
 	BinaryOperatorsMap = Map{

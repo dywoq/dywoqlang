@@ -14,6 +14,9 @@ type Reader interface {
 	// Returns an error if the scanner reached EOF
 	// or the current position is out of the input.
 	Current() (rune, error)
+
+	// Input returns the current input from the scanner.
+	Input() string
 }
 
 type Tracker interface {

@@ -2,6 +2,7 @@ package scanner
 
 import (
 	"errors"
+	"log"
 	"unicode"
 
 	"github.com/dywoq/dywoqlang/token"
@@ -11,13 +12,15 @@ type Scanner struct {
 	input    string
 	position *token.Position
 
-	setupOn    bool
+	setupOn bool
+	debug   bool
+
 	tokenizers []TokenizerFunc
 }
 
 // New returns a new pointer to Scanner.
-func New() *Scanner {
-	return &Scanner{input: "", position: &token.Position{Line: 1, Column: 1}, setupOn: false, tokenizers: make([]TokenizerFunc, 0)}
+func New(debug bool) *Scanner {
+	return &Scanner{input: "", position: &token.Position{Line: 1, Column: 1}, setupOn: false, debug: debug, tokenizers: make([]TokenizerFunc, 0)}
 }
 
 // Advance advances to the next position by n
@@ -40,13 +43,16 @@ func (s *Scanner) Advance(n int) error {
 		return nil
 	}
 
-	for i := 0; i < n; i++ {
-		s.position.Position++
+	for range n {
 		if s.Eof() {
 			return nil
 		}
-		r, _ := s.Current()
-		if r == '\n' {
+		r := rune(s.input[s.position.Position]) // Get character at current pos
+		s.outputf("advancing past %s\n", string(r))
+		s.position.Position++
+
+		if r == '\n' { // Check the character we just advanced past
+			s.outputf("entering new line...\n")
 			s.position.Line++
 			s.position.Column = 1
 		} else {
@@ -69,6 +75,7 @@ func (s *Scanner) Slice(start, end int) (string, error) {
 	case end > len(s.input):
 		return "", errors.New("end is higher than the input")
 	}
+	s.outputf("slicing %d and %d\n", start, end)
 	return s.input[start:end], nil
 }
 
@@ -97,6 +104,7 @@ func (s *Scanner) Current() (rune, error) {
 	if s.Eof() {
 		return 0, errors.New("reached eof")
 	}
+	s.outputf("getting current character %s\n", string(s.input[s.position.Position]))
 	return rune(s.input[s.position.Position]), nil
 }
 
@@ -110,7 +118,14 @@ func (s *Scanner) Position() *token.Position {
 // The only difference from token.NewToken is
 // that scanner automatically inserts the position.
 func (s *Scanner) New(literal string, kind token.Kind) *token.Token {
-	return token.NewToken(literal, kind, s.position)
+	posCopy := *s.position
+	s.outputf("creating new token: (\"%s\", %s, %v)\n", literal, kind, &posCopy)
+	return token.NewToken(literal, kind, &posCopy)
+}
+
+// Input returns the current input from the scanner.
+func (s *Scanner) Input() string {
+	return s.input
 }
 
 // Scan scans input, turning characters into the tokens.
@@ -155,9 +170,16 @@ func (s *Scanner) skipWhitespace() error {
 		if !unicode.IsSpace(r) {
 			return nil
 		}
+		s.outputf("skipping whitespace...\n")
 		if err := s.Advance(1); err != nil {
 			return err
 		}
+	}
+}
+
+func (s *Scanner) outputf(format string, v ...any) {
+	if s.debug {
+		log.Printf(format, v...)
 	}
 }
 
@@ -173,18 +195,25 @@ func (s *Scanner) tokenize() (*token.Token, error) {
 		tok, err := t(s)
 		if err != nil {
 			if errors.Is(err, ErrNoMatch) {
+				s.outputf("trying other tokenizer; got ErrNoMatch")
 				continue
 			}
 			return nil, err
 		}
 		return tok, nil
 	}
-	return token.NewToken("illegal", token.Illegal, s.position), nil
+	return token.NewToken("illegal", token.Illegal, s.position), errors.New("met illegal character")
 }
 
 func (s *Scanner) setup() {
 	if !s.setupOn {
 		s.tokenizers = []TokenizerFunc{
+			TokenizeBaseInstruction,
+			TokenizeIdentifier,
+			TokenizeSpecial,
+			TokenizeKeyword,
+			TokenizeSeparator,
+			TokenizeBinaryOperator,
 			TokenizeNumber,
 			TokenizeString,
 		}

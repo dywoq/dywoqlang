@@ -130,3 +130,213 @@ func TokenizeString(c Context) (*token.Token, error) {
 
 	return c.New(substr, token.String), nil
 }
+
+// TokenizeKeyword tokenizes a keyword.
+//
+// Returns an error if the scanner reached End Of File (EOF).
+//
+// If it doesn't match, the function returns ErrNoMatch
+// and advances to the initial position.
+func TokenizeKeyword(c Context) (*token.Token, error) {
+	if c.Eof() {
+		return nil, ErrEof
+	}
+	if r, _ := c.Current(); !unicode.IsLetter(r) {
+		return nil, ErrNoMatch
+	}
+
+	start := c.Position().Position
+	pos := start
+	for {
+		if pos >= len(c.Input()) {
+			break
+		}
+		r := rune(c.Input()[pos])
+		if !unicode.IsLetter(r) {
+			break
+		}
+		pos++
+	}
+
+	substr, err := c.Slice(start, pos)
+	if err != nil {
+		return nil, err
+	}
+
+	if !token.KeywordsMap.Is(substr) {
+		return nil, ErrNoMatch
+	}
+
+	if err := c.Advance(pos - start); err != nil {
+		return nil, err
+	}
+
+	return c.New(substr, token.Keyword), nil
+}
+
+// TokenizeSeparator tokenizes a separator.
+//
+// Returns an error if the scanner reached End Of File (EOF).
+//
+// If it doesn't match, the function returns ErrNoMatch
+// and advances to the initial position.
+func TokenizeSeparator(c Context) (*token.Token, error) {
+	if c.Eof() {
+		return nil, ErrEof
+	}
+	r, _ := c.Current()
+	if !token.SeparatorsMap.Is(string(r)) {
+		return nil, ErrNoMatch
+	}
+
+	if err := c.Advance(1); err != nil {
+		return nil, err
+	}
+
+	return c.New(string(r), token.Separator), nil
+}
+
+// TokenizeSpecial tokenizes a special names.
+//
+// Returns an error if the scanner reached End Of File (EOF).
+//
+// If it doesn't match, the function returns ErrNoMatch
+// and advances to the initial position.
+func TokenizeSpecial(c Context) (*token.Token, error) {
+	if c.Eof() {
+		return nil, ErrEof
+	}
+	if r, _ := c.Current(); !unicode.IsLetter(r) {
+		return nil, ErrNoMatch
+	}
+
+	start := c.Position().Position
+	for {
+		err := c.Advance(1)
+		if err != nil {
+			return nil, err
+		}
+
+		if c.Eof() {
+			break
+		}
+
+		r, _ := c.Current()
+		if !unicode.IsLetter(r) {
+			break
+		}
+	}
+
+	substr, err := c.Slice(start, c.Position().Position)
+	if err != nil {
+		return nil, err
+	}
+
+	if !token.SpecialMap.Is(substr) {
+		c.Position().Position = start
+		return nil, ErrNoMatch
+	}
+	return c.New(substr, token.Special), nil
+}
+
+// TokenizeBaseInstruction tokenizes base instructions.
+//
+// Returns an error if the scanner reached End Of File (EOF).
+//
+// If it doesn't match, the function returns ErrNoMatch
+// and advances to the initial position.
+func TokenizeBaseInstruction(c Context) (*token.Token, error) {
+	if c.Eof() {
+		return nil, ErrEof
+	}
+	if r, _ := c.Current(); !unicode.IsLetter(r) {
+		return nil, ErrNoMatch
+	}
+
+	start := c.Position().Position
+	for {
+		err := c.Advance(1)
+		if err != nil {
+			return nil, err
+		}
+
+		if c.Eof() {
+			break
+		}
+
+		r, _ := c.Current()
+		if !unicode.IsLetter(r) {
+			break
+		}
+	}
+
+	substr, err := c.Slice(start, c.Position().Position)
+	if err != nil {
+		return nil, err
+	}
+
+	if !token.BaseInstructionsMap.Is(substr) {
+		c.Position().Position = start
+		return nil, ErrNoMatch
+	}
+	return c.New(substr, token.BaseInstruction), nil
+}
+
+// TokenizeBinaryOperator tokenizes binary operators
+//
+// Returns an error if the scanner reached End Of File (EOF).
+//
+// If it doesn't match, the function returns ErrNoMatch
+// and advances to the initial position.
+func TokenizeBinaryOperator(c Context) (*token.Token, error) {
+	if c.Eof() {
+		return nil, ErrEof
+	}
+	r, _ := c.Current()
+	if !token.BinaryOperatorsMap.Is(string(r)) {
+		return nil, ErrNoMatch
+	}
+
+	if err := c.Advance(1); err != nil {
+		return nil, err
+	}
+	return c.New(string(r), token.BinaryOperator), nil
+}
+
+// TokenizeIdentifier tokenizes binary operators.
+func TokenizeIdentifier(c Context) (*token.Token, error) {
+	if c.Eof() {
+		return nil, ErrEof
+	}
+
+	r, _ := c.Current()
+	if !unicode.IsLetter(r) && r != '_' {
+		return nil, ErrNoMatch
+	}
+
+	start := c.Position().Position
+	pos := start
+
+	for pos < len(c.Input()) {
+		r := rune(c.Input()[pos])
+		if !(unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_') {
+			break
+		}
+		pos++
+	}
+
+	substr, err := c.Slice(start, pos)
+	if err != nil {
+		return nil, err
+	}
+
+	if !token.IsIdentifier(substr) {
+		return nil, ErrNoMatch
+	}
+
+	if err := c.Advance(pos - start); err != nil {
+		return nil, err
+	}
+
+	return c.New(substr, token.Identifier), nil
+}

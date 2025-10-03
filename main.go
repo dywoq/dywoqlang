@@ -8,9 +8,9 @@ import (
 )
 
 func main() {
-	s := scanner.New()
+	s := scanner.New(true)
 
-	tokens, err := s.Scan(`"Hi!" 23.232`)
+	tokens, err := s.Scan("mov e, 2+2;\nstdout eax;")
 	if err != nil {
 		panic(err)
 	}
