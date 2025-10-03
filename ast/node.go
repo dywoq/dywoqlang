@@ -41,6 +41,17 @@ type BinaryExpression struct {
 	Children []Node `json:"children"`
 }
 
+type InstructionCall struct {
+	Name      string                    `json:"name"`
+	IsUser    bool                      `json:"is_user"`
+	Arguments []InstructionCallArgument `json:"arguments"`
+}
+
+type InstructionCallArgument struct {
+	Value Node       `json:"value"`
+	Kind  token.Kind `json:"kind"`
+}
+
 func ToString(n Node) string {
 	if n == nil {
 		return "<nil>"
@@ -52,8 +63,10 @@ func ToString(n Node) string {
 	return string(json)
 }
 
-func (Declaration) Node()       {}
-func (FunctionParameter) Node() {}
-func (FunctionValue) Node()     {}
-func (Value) Node()             {}
-func (BinaryExpression) Node()  {}
+func (Declaration) Node()             {}
+func (FunctionParameter) Node()       {}
+func (FunctionValue) Node()           {}
+func (Value) Node()                   {}
+func (BinaryExpression) Node()        {}
+func (InstructionCall) Node()         {}
+func (InstructionCallArgument) Node() {}

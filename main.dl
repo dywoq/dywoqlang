@@ -1,4 +1,2 @@
-link(false) 
-link("main.main") 
-declare 
-main i32 ()
+mov s, 23;
+[instruct] 2, 3;

@@ -49,7 +49,8 @@ type ErrorCreator interface {
 type Expecter interface {
 	Expect(kind token.Kind) (*token.Token, error)
 	ExpectLiteral(lit string) (*token.Token, error)
-	ExpectMultiple(kind ...token.Kind) (*token.Token, error) 
+	ExpectMultiple(kind ...token.Kind) (*token.Token, error)
+	ExpectLiterals(lits ...string) (*token.Token, error)
 }
 
 type Context interface {

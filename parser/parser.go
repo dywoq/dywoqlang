@@ -102,6 +102,18 @@ func (p *Parser) ExpectMultiple(kinds ...token.Kind) (*token.Token, error) {
 	return tok, nil
 }
 
+func (p *Parser) ExpectLiterals(lits ...string) (*token.Token, error) {
+	if p.Eof() {
+		return nil, ErrEof
+	}
+	tok := p.tokens[p.pos]
+	if !slices.Contains(lits, tok.Literal) {
+		return nil, p.Errorf("expected at least one token literal (%v), got %v", lits, tok.Kind)
+	}
+	p.pos++
+	return tok, nil
+}
+
 func (p *Parser) Error(v ...any) error {
 	t, _ := p.Current()
 	pos := &token.Position{}
@@ -173,6 +185,7 @@ func (p *Parser) parse() (ast.Node, error) {
 func (p *Parser) setup() {
 	if !p.setupOn {
 		p.parsers = []MiniFunc{
+			ParseInstructionCall,
 			ParseDeclaration,
 		}
 		p.setupOn = true
