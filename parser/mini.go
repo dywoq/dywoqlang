@@ -133,9 +133,25 @@ func ParseValue(c Context, declared, linked bool) (ast.Node, error) {
 				return nil, err
 			}
 
+			copyAllowed := true
+
+			next, err = c.Current()
+			if err != nil {
+				return nil, err
+			}
+
+			if next.Literal == "copy" {
+				_, _ = c.ExpectLiteral("copy")
+				_, _ = c.ExpectLiteral("(")
+				val, _ := c.Expect(token.BoolConstant)
+				copyAllowed, _ = strconv.ParseBool(val.Literal)
+				_, _ = c.ExpectLiteral(")")
+			}
+
 			params = append(params, ast.FunctionParameter{
-				Identifier: ident.Literal,
-				Kind:       typ.Literal,
+				Identifier:  ident.Literal,
+				Kind:        typ.Literal,
+				CopyAllowed: copyAllowed,
 			})
 
 			next, _ = c.Current()

@@ -2,8 +2,6 @@ export
 pi i32 consteval(3)
 
 export
-something i64 (x i64, d i64) {
-	[std_call] 20, (ok bool) {
-		mov b1, ok;
-	};
+something i64 (x i64 copy(true), d i64 copy(false)) {
+	[std_call] 20, 20;
 }

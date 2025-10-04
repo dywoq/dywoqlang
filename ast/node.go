@@ -22,8 +22,9 @@ type Declaration struct {
 }
 
 type FunctionParameter struct {
-	Identifier string `json:"identifier"`
-	Kind       string `json:"kind"`
+	Identifier  string `json:"identifier"`
+	Kind        string `json:"kind"`
+	CopyAllowed bool   `json:"copy_allowed"`
 }
 
 type FunctionValue struct {
@@ -36,6 +37,7 @@ type Value struct {
 	Consteval bool       `json:"consteval"`
 	Kind      token.Kind `json:"kind"`
 	ValueNode Node       `json:"value_node,omitempty"`
+	Copied    bool       `json:"copied"`
 }
 
 type InstructionCall struct {
