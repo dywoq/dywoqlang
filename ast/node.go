@@ -24,8 +24,8 @@ type Declaration struct {
 
 type FunctionParameter struct {
 	Identifier  string `json:"identifier"`
-	Kind        string `json:"kind"`
 	CopyAllowed bool   `json:"copy_allowed"`
+	Kind        string `json:"kind"`
 }
 
 type FunctionValue struct {
@@ -34,11 +34,11 @@ type FunctionValue struct {
 }
 
 type Value struct {
-	Value     string     `json:"value,omitempty"`
 	Consteval bool       `json:"consteval"`
-	Kind      token.Kind `json:"kind"`
-	ValueNode Node       `json:"value_node,omitempty"`
 	Copied    bool       `json:"copied"`
+	Kind      token.Kind `json:"kind"`
+	Value     string     `json:"value,omitempty"`
+	ValueNode Node       `json:"value_node,omitempty"`
 }
 
 type InstructionCall struct {
@@ -60,8 +60,8 @@ type BinaryExpression struct {
 
 type MetaExpression struct {
 	Type  string         `json:"type"`
-	Value Node           `json:"value"`
 	Data  meta.Type[any] `json:"data"`
+	Value Node           `json:"value"`
 }
 
 func ToString(n Node) string {

@@ -84,6 +84,11 @@ var (
 		"stdout": BaseInstruction,
 		"stderr": BaseInstruction,
 		"mov":    BaseInstruction,
+		"ret":    BaseInstruction,
+		"add":    BaseInstruction,
+		"div":    BaseInstruction,
+		"mul":    BaseInstruction,
+		"sub":    BaseInstruction,
 	}
 
 	BinaryOperatorsMap = Map{
