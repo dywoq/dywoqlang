@@ -1,7 +1,9 @@
-main i32 (x i32, y i32) {
-	mov x, 223;
-	[ret] 10, 20;
-}
+export
+pi i32 consteval(3)
 
-link("runtime.main")
-__runtime_main i32 (x i32, y i32)
+export
+something i64 (x i64, d i64) {
+	[std_call] 20, (ok bool) {
+		mov b1, ok;
+	};
+}

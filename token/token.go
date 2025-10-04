@@ -39,11 +39,12 @@ const (
 
 var (
 	KeywordsMap = Map{
-		"export":  Keyword,
-		"module":  Keyword,
-		"import":  Keyword,
-		"declare": Keyword,
-		"link":    Keyword,
+		"export":    Keyword,
+		"module":    Keyword,
+		"import":    Keyword,
+		"declare":   Keyword,
+		"link":      Keyword,
+		"consteval": Keyword,
 	}
 
 	SpecialMap = Map{
@@ -73,6 +74,8 @@ var (
 		"u32":  Type,
 		"u64":  Type,
 		"void": Type,
+		"f32":  Type,
+		"f64":  Type,
 	}
 
 	BaseInstructionsMap = Map{

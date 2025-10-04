@@ -32,8 +32,10 @@ type FunctionValue struct {
 }
 
 type Value struct {
-	Value string     `json:"value"`
-	Kind  token.Kind `json:"kind"`
+	Value     string     `json:"value"`
+	Consteval bool       `json:"consteval"`
+	Kind      token.Kind `json:"kind"`
+	ValueNode Node       `json:"value_node,omitempty"`
 }
 
 type InstructionCall struct {
@@ -43,8 +45,9 @@ type InstructionCall struct {
 }
 
 type InstructionCallArgument struct {
-	Value Node       `json:"value"`
-	Kind  token.Kind `json:"kind"`
+	Value     Node       `json:"value"`
+	Consteval bool       `json:"consteval"`
+	Kind      token.Kind `json:"kind"`
 }
 
 func ToString(n Node) string {

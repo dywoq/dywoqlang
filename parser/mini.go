@@ -10,10 +10,24 @@ import (
 // MiniFunc is an alias for functions that represent mini parser.
 type MiniFunc func(c Context) (ast.Node, error)
 
+// ParseDeclaration parses a declaration statement.
+//
+// A declaration can include optional modifiers:
+// - `link("module")` or `link(true|false)`
+// - `export`
+// - `declare`
+//
+// The parser expects the following structure:
+//
+//	[link(...)] [export] [declare] <identifier> <type> <value>
+//
+// Returns an *ast.Declaration node containing all metadata
+// and parsed value (function, literal, or identifier).
 func ParseDeclaration(c Context) (ast.Node, error) {
 	var (
-		exported, declared, linked, canBeLinked bool
-		linkedFrom                              string
+		exported, declared, linked bool
+		canBeLinked                bool = true
+		linkedFrom                 string
 	)
 loop:
 	for !c.Eof() {
@@ -40,7 +54,7 @@ loop:
 
 		case "export":
 			if !canBeLinked {
-				return nil, c.Error("symbols that can be linked can't be exported")
+				return nil, c.Error("symbols that can't be linked can't be exported")
 			}
 			_, _ = c.ExpectLiteral("export")
 			exported = true
@@ -73,6 +87,18 @@ loop:
 	}, nil
 }
 
+// ParseValue parses any value expression.
+//
+// A value can be:
+//   - integer, float, or string literal
+//   - identifier
+//   - function value: `(x i32, y i32) { ... }`
+//   - consteval expression: `consteval(<expr>)`
+//
+// Returns an *ast.Value or *ast.FunctionValue node.
+//
+// If the value is consteval, Consteval=true and
+// the evaluated expression is stored in ValueNode.
 func ParseValue(c Context, declared, linked bool) (ast.Node, error) {
 	t, err := c.Current()
 	if err != nil {
@@ -82,7 +108,7 @@ func ParseValue(c Context, declared, linked bool) (ast.Node, error) {
 	switch {
 	case t.Kind == token.Integer, t.Kind == token.Float, t.Kind == token.String:
 		_, _ = c.Expect(t.Kind)
-		return ast.Value{Value: t.Literal, Kind: t.Kind}, nil
+		return ast.Value{Value: t.Literal, Consteval: false, Kind: t.Kind}, nil
 
 	case t.Kind == token.Identifier:
 		_, _ = c.Expect(token.Identifier)
@@ -97,8 +123,15 @@ func ParseValue(c Context, declared, linked bool) (ast.Node, error) {
 				break
 			}
 
-			ident, _ := c.Expect(token.Identifier)
-			typ, _ := c.Expect(token.Type)
+			ident, err := c.Expect(token.Identifier)
+			if err != nil {
+				return nil, err
+			}
+
+			typ, err := c.Expect(token.Type)
+			if err != nil {
+				return nil, err
+			}
 
 			params = append(params, ast.FunctionParameter{
 				Identifier: ident.Literal,
@@ -129,11 +162,33 @@ func ParseValue(c Context, declared, linked bool) (ast.Node, error) {
 			Parameters: params,
 			Body:       nil,
 		}, nil
+
+	case t.Literal == "consteval":
+		_, _ = c.ExpectLiteral("consteval")
+		_, _ = c.ExpectLiteral("(")
+		expr, err := ParseValue(c, false, false)
+		if err != nil {
+			return nil, err
+		}
+		_, _ = c.ExpectLiteral(")")
+		return ast.Value{
+			Kind:      t.Kind,
+			ValueNode: expr,
+			Consteval: true,
+		}, nil
 	}
 
 	return nil, c.Errorf("unknown value type: %v", t.Literal)
 }
 
+// ParseInstructionCall parses an instruction call.
+//
+// Instruction calls can be base or user-defined:
+//   - Base: `mov x, 10;`
+//   - User: `[ret] 10, 20;`
+//
+// Each argument inside the instruction is parsed via ParseValue.
+// Returns an *ast.InstructionCall node containing arguments.
 func ParseInstructionCall(c Context) (ast.Node, error) {
 	var (
 		isUser bool
@@ -185,6 +240,14 @@ func ParseInstructionCall(c Context) (ast.Node, error) {
 	}, nil
 }
 
+// ParseStatement parses a single statement.
+//
+// A statement currently can only be:
+//   - Base instruction (e.g. `mov ...;`)
+//   - User instruction (e.g. `[ret] ...;`)
+//
+// Returns an *ast.InstructionCall node.
+// Any unexpected token produces an error.
 func ParseStatement(c Context) (ast.Node, error) {
 	t, _ := c.Current()
 
@@ -198,6 +261,12 @@ func ParseStatement(c Context) (ast.Node, error) {
 	}
 }
 
+// ParseBody parses a function or block body.
+//
+// The body must start with '{' and end with '}'.
+// Inside the braces, statements are parsed by ParseStatement.
+//
+// Returns a slice of AST nodes representing statements.
 func ParseBody(c Context) ([]ast.Node, error) {
 	_, _ = c.ExpectLiteral("{")
 	var statements []ast.Node
