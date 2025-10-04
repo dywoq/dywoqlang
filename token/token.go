@@ -46,6 +46,7 @@ var (
 		"link":      Keyword,
 		"consteval": Keyword,
 		"copy":      Keyword,
+		"meta":      Keyword,
 	}
 
 	SpecialMap = Map{

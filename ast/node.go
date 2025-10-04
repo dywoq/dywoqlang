@@ -3,6 +3,7 @@ package ast
 import (
 	"encoding/json"
 
+	"github.com/dywoq/dywoqlang/meta"
 	"github.com/dywoq/dywoqlang/token"
 )
 
@@ -33,7 +34,7 @@ type FunctionValue struct {
 }
 
 type Value struct {
-	Value     string     `json:"value"`
+	Value     string     `json:"value,omitempty"`
 	Consteval bool       `json:"consteval"`
 	Kind      token.Kind `json:"kind"`
 	ValueNode Node       `json:"value_node,omitempty"`
@@ -57,6 +58,12 @@ type BinaryExpression struct {
 	Children []Node `json:"children"`
 }
 
+type MetaExpression struct {
+	Type  string         `json:"type"`
+	Value Node           `json:"value"`
+	Data  meta.Type[any] `json:"data"`
+}
+
 func ToString(n Node) string {
 	if n == nil {
 		return "<nil>"
@@ -75,3 +82,4 @@ func (Value) Node()                   {}
 func (InstructionCall) Node()         {}
 func (InstructionCallArgument) Node() {}
 func (BinaryExpression) Node()        {}
+func (MetaExpression) Node()          {}

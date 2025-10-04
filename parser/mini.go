@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/dywoq/dywoqlang/ast"
+	"github.com/dywoq/dywoqlang/meta"
 	"github.com/dywoq/dywoqlang/token"
 )
 
@@ -94,6 +95,7 @@ loop:
 //   - identifier
 //   - function value: `(x i32, y i32) { ... }`
 //   - consteval expression: `consteval(<expr>)`
+//   - meta expression: `meta(<literal, strings>)`. Function values, binary expressions and identifiers are not allowed.
 //
 // Returns an *ast.Value or *ast.FunctionValue node.
 //
@@ -180,6 +182,11 @@ func ParseValue(c Context, declared, linked bool) (ast.Node, error) {
 				Body:       body,
 			}, nil
 		}
+
+		if next.Literal != "{" && (!declared || !linked) {
+			return nil, c.Errorf("non-declared or non-linked functions must have a body")
+		}
+
 		return ast.FunctionValue{
 			Parameters: params,
 			Body:       nil,
@@ -212,6 +219,41 @@ func ParseValue(c Context, declared, linked bool) (ast.Node, error) {
 			ValueNode: expr,
 			Consteval: false,
 			Copied:    true,
+		}, nil
+
+	case t.Literal == "meta":
+		_, _ = c.ExpectLiteral("meta")
+		_, _ = c.ExpectLiteral("(")
+		expr, err := ParseValue(c, false, false)
+		if err != nil {
+			return nil, err
+		}
+		var m meta.Type[any]
+		switch t := expr.(type) {
+		case ast.Value:
+			if t.Kind == token.Identifier {
+				return nil, c.Errorf("identifiers are not allowed in meta(...) expression")
+			}
+			num, err := strconv.Atoi(t.Value)
+			if err != nil {
+				return nil, err
+			}
+			m, err = meta.Integral(num)
+			if err != nil {
+				return nil, err
+			}
+		case ast.FunctionValue:
+			return nil, c.Errorf("function values are not allowed in meta(...) expression")
+		case ast.BinaryExpression:
+			return nil, c.Errorf("binary expressions are not allowed in meta(...) expression")
+		default:
+			return nil, c.Errorf("unknown ast node: %v", ast.ToString(expr))
+		}
+		_, _ = c.ExpectLiteral(")")
+		return ast.MetaExpression{
+			Type:  m.Name,
+			Value: expr,
+			Data:  m,
 		}, nil
 
 	case token.BinaryOperatorsMap.Is(t.Literal):

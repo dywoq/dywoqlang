@@ -1,7 +1,1 @@
-link("runtime.pi")
-export
-pi i32 consteval((x i64, y i64))
-
-link("runtime.pi")
-export
-pi i32 consteval((x i64, y i64))
+link(true) export pi f64 3.14
