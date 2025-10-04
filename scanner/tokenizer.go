@@ -464,3 +464,36 @@ func TokenizeBoolConstant(c Context) (*token.Token, error) {
 
 	return c.New(substr, token.BoolConstant), nil
 }
+
+// TokenizeTypes tokenizes comments that start with hash (#).
+//
+// Returns an error if the scanner reached End Of File (EOF).
+//
+// If it doesn't match, the function returns ErrNoMatch
+// and advances to the initial position.
+func TokenizeComment(c Context) (*token.Token, error) {
+	r, err := c.Current()
+	if err != nil {
+		return nil, err
+	}
+
+	if r != '#' {
+		return nil, ErrNoMatch
+	}
+
+	start := c.Position().Position
+	for {
+		if c.Eof() {
+			break
+		}
+		r, _ := c.Current()
+		if r == '\n' {
+			break
+		}
+		c.Advance(1)
+	}
+
+	end := c.Position().Position
+	literal, _ := c.Slice(start, end)
+	return c.New(literal, token.Comment), nil
+}

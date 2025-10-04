@@ -152,7 +152,7 @@ func (s *Scanner) Scan(input string) ([]*token.Token, error) {
 
 	var result []*token.Token
 	for !s.Eof() {
-		err := s.skipWhitespace()
+		err := s.skip()
 		if err != nil {
 			return nil, err
 		}
@@ -167,7 +167,7 @@ func (s *Scanner) Scan(input string) ([]*token.Token, error) {
 	return result, nil
 }
 
-func (s *Scanner) skipWhitespace() error {
+func (s *Scanner) skip() error {
 	for {
 		if s.Eof() {
 			return nil
@@ -177,16 +177,14 @@ func (s *Scanner) skipWhitespace() error {
 		if err != nil {
 			return nil
 		}
-
-		if !unicode.IsSpace(r) {
-			return nil
+		if unicode.IsSpace(r) {
+			s.outputf("skipping whitespace...\n")
+			if err := s.Advance(1); err != nil {
+				return nil
+			}
+			continue
 		}
-
-		s.outputf("skipping whitespace...\n")
-
-		if err := s.Advance(1); err != nil {
-			return nil
-		}
+		return nil
 	}
 }
 
@@ -221,6 +219,7 @@ func (s *Scanner) tokenize() (*token.Token, error) {
 func (s *Scanner) setup() {
 	if !s.setupOn {
 		s.tokenizers = []TokenizerFunc{
+			TokenizeComment,
 			TokenizeBoolConstant,
 			TokenizeTypes,
 			TokenizeBaseInstruction,

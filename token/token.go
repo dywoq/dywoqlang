@@ -34,6 +34,7 @@ const (
 	Special         Kind = "special"
 	BinaryOperator  Kind = "binary_operator"
 	BoolConstant    Kind = "bool_constant"
+	Comment         Kind = "comment"
 	Eof             Kind = "eof"
 )
 

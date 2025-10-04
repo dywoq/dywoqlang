@@ -2,6 +2,7 @@ package parser
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/dywoq/dywoqlang/ast"
 	"github.com/dywoq/dywoqlang/token"
@@ -75,7 +76,7 @@ loop:
 		return nil, err
 	}
 
-	return ast.Declaration{
+	return &ast.Declaration{
 		Name:        identifier.Literal,
 		Kind:        tType.Literal,
 		Exported:    exported,
@@ -370,10 +371,19 @@ func ParseBody(c Context) ([]ast.Node, error) {
 //
 // Returns ast.ModuleDeclaration.
 func ParseModuleDeclaration(c Context) (ast.Node, error) {
+	for !c.Eof() {
+		t, _ := c.Current()
+		if t.Kind != token.Comment {
+			break
+		}
+		c.Advance(1)
+	}
+
 	ident, err := c.Expect(token.String)
 	if err != nil {
 		return nil, err
 	}
+
 	_, _ = c.ExpectLiteral(":")
 	_, _ = c.ExpectLiteral("{")
 	var body []ast.Node
@@ -402,17 +412,37 @@ func ParseModuleDeclaration(c Context) (ast.Node, error) {
 // ParseTopStatement parses the top statements.
 // It can be a function, variable, constant or module.
 func ParseTopStatement(c Context) (ast.Node, error) {
+	var docLines []string
+	for !c.Eof() {
+		t, err := c.Current()
+		if err != nil {
+			return nil, err
+		}
+		if t.Kind != token.Comment {
+			break
+		}
+		docLines = append(docLines, strings.TrimPrefix(t.Literal, "# "))
+		c.Advance(1)
+	}
+
 	t, err := c.Current()
 	if err != nil {
 		return nil, err
 	}
 
+	var node ast.Node
 	switch t.Kind {
 	case token.String:
-		return ParseModuleDeclaration(c)
+		node, err = ParseModuleDeclaration(c)
 	case token.Identifier, token.Keyword:
-		return ParseDeclaration(c)
+		node, err = ParseDeclaration(c)
 	default:
 		return nil, c.Errorf("unexpected token at top level: %v", t.Literal)
 	}
+
+	if d, ok := node.(ast.Documentable); ok {
+		d.SetDocs(strings.Join(docLines, "\n"))
+	}
+
+	return node, err
 }

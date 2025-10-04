@@ -10,16 +10,21 @@ type Node interface {
 	Node()
 }
 
+type Documentable interface {
+	SetDocs(doc string) error
+}
+
 type Declaration struct {
-	Name        string `json:"name"`
-	Kind        string `json:"kind"`
-	Exported    bool   `json:"exported"`
-	Declared    bool   `json:"declared"`
-	Linked      bool   `json:"linked"`
-	LinkedFrom  string `json:"linked_from"`
-	CanBeLinked bool   `json:"can_be_linked"`
-	Source      string `json:"source"`
-	Value       Node   `json:"value"`
+	Name          string `json:"name"`
+	Kind          string `json:"kind"`
+	Documentation string `json:"documentation,omitempty"`
+	Exported      bool   `json:"exported"`
+	Declared      bool   `json:"declared"`
+	Linked        bool   `json:"linked"`
+	LinkedFrom    string `json:"linked_from"`
+	CanBeLinked   bool   `json:"can_be_linked"`
+	Source        string `json:"source"`
+	Value         Node   `json:"value"`
 }
 
 type FunctionParameter struct {
@@ -29,8 +34,8 @@ type FunctionParameter struct {
 }
 
 type FunctionValue struct {
-	Body       []Node              `json:"body"`
 	Parameters []FunctionParameter `json:"parameters"`
+	Body       []Node              `json:"body"`
 }
 
 type Value struct {
@@ -59,8 +64,8 @@ type BinaryExpression struct {
 }
 
 type ModuleDeclaration struct {
-	Name string `json:"name"`
-	Body []Node `json:"body"`
+	Name          string `json:"name"`
+	Body          []Node `json:"body"`
 }
 
 type ArrayValue struct {
@@ -83,7 +88,12 @@ func ToString(n Node) string {
 	return string(json)
 }
 
-func (Declaration) Node()             {}
+func (d *Declaration) SetDocs(doc string) error {
+	d.Documentation = doc
+	return nil
+}
+
+func (*Declaration) Node()            {}
 func (FunctionParameter) Node()       {}
 func (FunctionValue) Node()           {}
 func (Value) Node()                   {}

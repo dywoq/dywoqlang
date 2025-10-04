@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	debug := false
+	debug := true
 
 	bytes, err := os.ReadFile("main.dl")
 	if err != nil {
@@ -38,7 +38,9 @@ func main() {
 		panic(err)
 	}
 
-	for _, node := range nodes {
-		fmt.Println(ast.ToString(node))
+	if !debug {
+		for _, node := range nodes {
+			fmt.Println(ast.ToString(node))
+		}
 	}
 }
