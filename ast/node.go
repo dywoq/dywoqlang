@@ -19,6 +19,7 @@ type Declaration struct {
 	Linked      bool   `json:"linked"`
 	LinkedFrom  string `json:"linked_from"`
 	CanBeLinked bool   `json:"can_be_linked"`
+	Source      string `json:"source"`
 	Value       Node   `json:"value"`
 }
 
@@ -64,6 +65,11 @@ type MetaExpression struct {
 	Value Node           `json:"value"`
 }
 
+type ModuleDeclaration struct {
+	Name string `json:"name"`
+	Body []Node `json:"body"`
+}
+
 func ToString(n Node) string {
 	if n == nil {
 		return "<nil>"
@@ -83,3 +89,4 @@ func (InstructionCall) Node()         {}
 func (InstructionCallArgument) Node() {}
 func (BinaryExpression) Node()        {}
 func (MetaExpression) Node()          {}
+func (ModuleDeclaration) Node()       {}

@@ -17,6 +17,8 @@ type Parser struct {
 
 	debug   bool
 	setupOn bool
+
+	module string
 }
 
 func New(debug bool) *Parser {
@@ -135,6 +137,16 @@ func (p *Parser) Errorf(format string, v ...any) error {
 	return errors.New(formatted)
 }
 
+// SetModule sets the current processing module name.
+func (p *Parser) SetModule(name string) {
+	p.module = name
+}
+
+// Module gets the current processing module name.
+func (p *Parser) Module() string {
+	return p.module
+}
+
 func (p *Parser) outputf(format string, v ...any) {
 	if p.debug {
 		log.Printf(format, v...)
@@ -185,6 +197,7 @@ func (p *Parser) parse() (ast.Node, error) {
 func (p *Parser) setup() {
 	if !p.setupOn {
 		p.parsers = []MiniFunc{
+			ParseModuleDeclaration,
 			ParseDeclaration,
 			ParseInstructionCall,
 		}

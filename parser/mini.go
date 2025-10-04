@@ -336,6 +336,8 @@ func ParseStatement(c Context) (ast.Node, error) {
 		return ParseInstructionCall(c)
 	case token.Separator:
 		return ParseInstructionCall(c)
+	case token.String:
+		return ParseModuleDeclaration(c)
 	default:
 		return nil, c.Errorf("unexpected token in statement: %v", t.Literal)
 	}
@@ -366,4 +368,50 @@ func ParseBody(c Context) ([]ast.Node, error) {
 
 	_, _ = c.ExpectLiteral("}")
 	return statements, nil
+}
+
+func ParseModuleDeclaration(c Context) (ast.Node, error) {
+	ident, err := c.Expect(token.String)
+	if err != nil {
+		return nil, err
+	}
+	_, _ = c.ExpectLiteral(":")
+	_, _ = c.ExpectLiteral("{")
+	var body []ast.Node
+	for {
+		if c.Eof() {
+			return nil, c.Errorf("module %s must be closed", ident.Literal)
+		}
+		if brace, _ := c.Current(); brace.Literal == "}" {
+			break
+		}
+		n, err := ParseTopModuleStatement(c)
+		if err != nil {
+			return nil, err
+		}
+		body = append(body, n)
+	}
+	_, _ = c.ExpectLiteral("}")
+
+	c.SetModule(ident.Literal)
+	return ast.ModuleDeclaration{
+		Name: c.Module(),
+		Body: body,
+	}, nil
+}
+
+func ParseTopModuleStatement(c Context) (ast.Node, error) {
+	t, err := c.Current()
+	if err != nil {
+		return nil, err
+	}
+
+	switch t.Kind {
+	case token.String:
+		return ParseModuleDeclaration(c)
+	case token.Identifier, token.Keyword:
+		return ParseDeclaration(c)
+	default:
+		return nil, c.Errorf("unexpected token at top level: %v", t.Literal)
+	}
 }

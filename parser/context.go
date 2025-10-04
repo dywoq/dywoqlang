@@ -53,6 +53,14 @@ type Expecter interface {
 	ExpectLiterals(lits ...string) (*token.Token, error)
 }
 
+type ModuleManager interface {
+	// SetModule sets the current processing module name.
+	SetModule(name string)
+
+	// Module gets the current processing module name.
+	Module() string
+}
+
 type Context interface {
 	Reader
 	Tracker
@@ -60,4 +68,5 @@ type Context interface {
 	Advancer
 	ErrorCreator
 	Expecter
+	ModuleManager
 }

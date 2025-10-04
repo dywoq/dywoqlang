@@ -62,6 +62,7 @@ var (
 		";": Separator,
 		"[": Separator,
 		"]": Separator,
+		":": Separator,
 	}
 
 	TypesMap = Map{
