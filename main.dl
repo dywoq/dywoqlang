@@ -1,7 +1,4 @@
 export
-pi i32 consteval(3)
-
-export
-something i64 (x i64 copy(true), d i64 copy(false)) {
-	[std_call] 20, 20;
-}
+pi i32 consteval((x i32, y i32) {
+	[ret] copy(consteval(10+23*2));
+})

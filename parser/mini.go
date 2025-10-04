@@ -107,8 +107,14 @@ func ParseValue(c Context, declared, linked bool) (ast.Node, error) {
 
 	switch {
 	case t.Kind == token.Integer, t.Kind == token.Float, t.Kind == token.String:
-		_, _ = c.Expect(t.Kind)
-		return ast.Value{Value: t.Literal, Consteval: false, Kind: t.Kind}, nil
+		nodes, err := ParseBinaryExpression(c)
+		if err != nil {
+			return nil, err
+		}
+		if len(nodes) == 1 {
+			return nodes[0], nil
+		}
+		return nodes[0], nil
 
 	case t.Kind == token.Identifier:
 		_, _ = c.Expect(token.Identifier)
@@ -192,6 +198,31 @@ func ParseValue(c Context, declared, linked bool) (ast.Node, error) {
 			ValueNode: expr,
 			Consteval: true,
 		}, nil
+
+	case t.Literal == "copy":
+		_, _ = c.ExpectLiteral("copy")
+		_, _ = c.ExpectLiteral("(")
+		expr, err := ParseValue(c, false, false)
+		if err != nil {
+			return nil, err
+		}
+		_, _ = c.ExpectLiteral(")")
+		return ast.Value{
+			Kind:      t.Kind,
+			ValueNode: expr,
+			Consteval: false,
+			Copied:    true,
+		}, nil
+
+	case token.BinaryOperatorsMap.Is(t.Literal):
+		nodes, err := ParseBinaryExpression(c)
+		if err != nil {
+			return nil, err
+		}
+		if len(nodes) == 1 {
+			return nodes[0], nil
+		}
+		return nodes[0], nil
 	}
 
 	return nil, c.Errorf("unknown value type: %v", t.Literal)
@@ -205,6 +236,10 @@ func ParseValue(c Context, declared, linked bool) (ast.Node, error) {
 //
 // Each argument inside the instruction is parsed via ParseValue.
 // Returns an *ast.InstructionCall node containing arguments.
+//
+// If you want to provide a copied arguments:
+//
+//   - `[user_function] copy`
 func ParseInstructionCall(c Context) (ast.Node, error) {
 	var (
 		isUser bool
@@ -302,4 +337,80 @@ func ParseBody(c Context) ([]ast.Node, error) {
 
 	_, _ = c.ExpectLiteral("}")
 	return statements, nil
+}
+
+func ParseBinaryExpression(c Context) ([]ast.Node, error) {
+	var nodes []ast.Node
+
+	parseOperand := func() (ast.Node, error) {
+		t, err := c.Current()
+		if err != nil {
+			return nil, err
+		}
+		switch t.Kind {
+		case token.Integer, token.Float, token.Identifier:
+			_ = c.Advance(1)
+			return ast.Value{Value: t.Literal, Kind: t.Kind}, nil
+		default:
+			return nil, c.Errorf("expected number or identifier, got %q", t.Literal)
+		}
+	}
+
+	parseMulDiv := func() (ast.Node, error) {
+		left, err := parseOperand()
+		if err != nil {
+			return nil, err
+		}
+
+		for !c.Eof() {
+			t, _ := c.Current()
+			if t.Kind != token.BinaryOperator || (t.Literal != "*" && t.Literal != "/") {
+				break
+			}
+			op := t.Literal[0]
+			_ = c.Advance(1)
+
+			right, err := parseOperand()
+			if err != nil {
+				return nil, err
+			}
+
+			left = ast.BinaryExpression{
+				Operator: string(op),
+				Children: []ast.Node{left, right},
+			}
+		}
+		return left, nil
+	}
+
+	for !c.Eof() {
+		left, err := parseMulDiv()
+		if err != nil {
+			return nil, err
+		}
+
+		for !c.Eof() {
+			t, _ := c.Current()
+			if t.Kind != token.BinaryOperator || (t.Literal != "+" && t.Literal != "-") {
+				break
+			}
+			op := t.Literal[0]
+			_ = c.Advance(1)
+
+			right, err := parseMulDiv()
+			if err != nil {
+				return nil, err
+			}
+
+			left = ast.BinaryExpression{
+				Operator: string(op),
+				Children: []ast.Node{left, right},
+			}
+		}
+
+		nodes = append(nodes, left)
+		break
+	}
+
+	return nodes, nil
 }

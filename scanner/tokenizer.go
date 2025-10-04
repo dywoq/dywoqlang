@@ -388,7 +388,7 @@ func TokenizeTypes(c Context) (*token.Token, error) {
 	case "str", "void", "bool":
 		return c.New(substr, token.Type), nil
 
-	case "i", "u":
+	case "i", "u", "f":
 		for {
 			c.Advance(1)
 			if c.Eof() {

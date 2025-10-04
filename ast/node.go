@@ -52,6 +52,11 @@ type InstructionCallArgument struct {
 	Kind      token.Kind `json:"kind"`
 }
 
+type BinaryExpression struct {
+	Operator string `json:"operator"`
+	Children []Node `json:"children"`
+}
+
 func ToString(n Node) string {
 	if n == nil {
 		return "<nil>"
@@ -69,3 +74,4 @@ func (FunctionValue) Node()           {}
 func (Value) Node()                   {}
 func (InstructionCall) Node()         {}
 func (InstructionCallArgument) Node() {}
+func (BinaryExpression) Node()        {}
