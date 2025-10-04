@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	debug := true
+	debug := false
 
 	bytes, err := os.ReadFile("main.dl")
 	if err != nil {

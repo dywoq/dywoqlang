@@ -3,9 +3,11 @@ package parser
 import (
 	"errors"
 	"fmt"
-	"github.com/dywoq/dywoqlang/ast"
 	"log"
+	"runtime"
 	"slices"
+
+	"github.com/dywoq/dywoqlang/ast"
 
 	"github.com/dywoq/dywoqlang/token"
 )
@@ -117,23 +119,25 @@ func (p *Parser) ExpectLiterals(lits ...string) (*token.Token, error) {
 }
 
 func (p *Parser) Error(v ...any) error {
+	name := p.functionName(2)
 	t, _ := p.Current()
 	pos := &token.Position{}
 	if t != nil {
 		pos = t.Position
 	}
-	formatted := fmt.Sprintf("%v (source is %d, token position: %v)", v, p.pos, pos)
+	formatted := fmt.Sprintf("%v (source is %d, token position: %v, function: %s)", v, p.pos, pos, name)
 	return errors.New(formatted)
 }
 
 func (p *Parser) Errorf(format string, v ...any) error {
+	name := p.functionName(2)
 	t, _ := p.Current()
 	pos := &token.Position{}
 	if t != nil {
 		pos = t.Position
 	}
 	custom := fmt.Sprintf(format, v...)
-	formatted := fmt.Sprintf("%s (source is %d, token position: %v)", custom, p.pos, pos)
+	formatted := fmt.Sprintf("%s (source is %d, token position: %v, function: %s)", custom, p.pos, pos, name)
 	return errors.New(formatted)
 }
 
@@ -203,6 +207,18 @@ func (p *Parser) setup() {
 		}
 		p.setupOn = true
 	}
+}
+
+func (p *Parser) functionName(skip int) string {
+	name := ""
+	pc, _, _, ok := runtime.Caller(skip)
+	if !ok {
+		name = "<unknown>"
+	} else {
+		fn := runtime.FuncForPC(pc)
+		name = fn.Name()
+	}
+	return name
 }
 
 func (p *Parser) reset(tokens []*token.Token) {

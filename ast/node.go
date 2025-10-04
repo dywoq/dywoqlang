@@ -3,7 +3,6 @@ package ast
 import (
 	"encoding/json"
 
-	"github.com/dywoq/dywoqlang/meta"
 	"github.com/dywoq/dywoqlang/token"
 )
 
@@ -59,15 +58,18 @@ type BinaryExpression struct {
 	Children []Node `json:"children"`
 }
 
-type MetaExpression struct {
-	Type  string         `json:"type"`
-	Data  meta.Type[any] `json:"data"`
-	Value Node           `json:"value"`
-}
-
 type ModuleDeclaration struct {
 	Name string `json:"name"`
 	Body []Node `json:"body"`
+}
+
+type ArrayValue struct {
+	MaxSize  int            `json:"max_size"`
+	Elements []ArrayElement `json:"elements"`
+}
+
+type ArrayElement struct {
+	Value Node `json:"value"`
 }
 
 func ToString(n Node) string {
@@ -88,5 +90,6 @@ func (Value) Node()                   {}
 func (InstructionCall) Node()         {}
 func (InstructionCallArgument) Node() {}
 func (BinaryExpression) Node()        {}
-func (MetaExpression) Node()          {}
 func (ModuleDeclaration) Node()       {}
+func (ArrayValue) Node()              {}
+func (ArrayElement) Node()            {}

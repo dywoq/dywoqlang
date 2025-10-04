@@ -410,6 +410,9 @@ func TokenizeTypes(c Context) (*token.Token, error) {
 		}
 
 		return c.New(substr, token.Type), nil
+
+	case "[]":
+		return c.New(substr, token.Type), nil
 	}
 
 	c.Position().Position = start

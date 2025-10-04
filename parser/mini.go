@@ -4,7 +4,6 @@ import (
 	"strconv"
 
 	"github.com/dywoq/dywoqlang/ast"
-	"github.com/dywoq/dywoqlang/meta"
 	"github.com/dywoq/dywoqlang/token"
 )
 
@@ -96,6 +95,7 @@ loop:
 //   - function value: `(x i32, y i32) { ... }`
 //   - consteval expression: `consteval(<expr>)`
 //   - meta expression: `meta(<literal, strings>)`. Function values and identifiers are not allowed.
+//   - arrays: `i32{2, 3, 4}[]` or `i32{2, 3, 4}[10]`
 //
 // Returns an *ast.Value or *ast.FunctionValue node.
 //
@@ -215,40 +215,30 @@ func ParseValue(c Context, declared, linked bool) (ast.Node, error) {
 			Copied:    true,
 		}, nil
 
-	case t.Literal == "meta":
-		_, _ = c.ExpectLiteral("meta")
+	case t.Literal == "array":
+		_, _ = c.ExpectLiteral("array")
 		_, _ = c.ExpectLiteral("(")
-		expr, err := ParseValue(c, false, false)
-		if err != nil {
-			return nil, err
-		}
-		var m meta.Type[any]
-		switch t := expr.(type) {
-		case ast.Value:
-			if t.Kind == token.Identifier {
-				return nil, c.Errorf("identifiers are not allowed in meta(...) expression")
+		elements := []ast.ArrayElement{}
+		for {
+			if c.Eof() {
+				return nil, c.Errorf("")
 			}
-			num, err := strconv.Atoi(t.Value)
+			n, err := ParseValue(c, false, false)
 			if err != nil {
 				return nil, err
 			}
-			m, err = meta.Integral(num)
-			if err != nil {
-				return nil, err
+			elements = append(elements, ast.ArrayElement{Value: n})
+			c.Advance(1)
+
+			if t, _ = c.Current(); t.Literal == "," {
+				continue
 			}
-		case ast.FunctionValue:
-			return nil, c.Errorf("function values are not allowed in meta(...) expression")
-		case ast.BinaryExpression:
-			return nil, c.Errorf("binary expressions are not allowed in meta(...) expression")
-		default:
-			return nil, c.Errorf("unknown ast node: %v", ast.ToString(expr))
+			if t, _ = c.Current(); t.Literal == ")" {
+				break
+			}
 		}
 		_, _ = c.ExpectLiteral(")")
-		return ast.MetaExpression{
-			Type:  m.Name,
-			Value: expr,
-			Data:  m,
-		}, nil
+		return ast.ArrayValue{MaxSize: len(elements), Elements: elements}, nil
 	}
 
 	return nil, c.Errorf("unknown value type: %v", t.Literal)
@@ -373,9 +363,10 @@ func ParseBody(c Context) ([]ast.Node, error) {
 // ParseModuleDeclaration parses a module declaration.
 //
 // Allowed syntax:
-//    "main": {
-//       # top declarations (functions, variables, constants...)
-//    }
+//
+//	"main": {
+//	   # top declarations (functions, variables, constants...)
+//	}
 //
 // Returns ast.ModuleDeclaration.
 func ParseModuleDeclaration(c Context) (ast.Node, error) {

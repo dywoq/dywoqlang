@@ -40,13 +40,13 @@ const (
 var (
 	KeywordsMap = Map{
 		"export":    Keyword,
-		"module":    Keyword,
 		"import":    Keyword,
 		"declare":   Keyword,
 		"link":      Keyword,
 		"consteval": Keyword,
 		"copy":      Keyword,
 		"meta":      Keyword,
+		"array":     Keyword,
 	}
 
 	SpecialMap = Map{
