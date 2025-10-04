@@ -370,6 +370,14 @@ func ParseBody(c Context) ([]ast.Node, error) {
 	return statements, nil
 }
 
+// ParseModuleDeclaration parses a module declaration.
+//
+// Allowed syntax:
+//    "main": {
+//       # top declarations (functions, variables, constants...)
+//    }
+//
+// Returns ast.ModuleDeclaration.
 func ParseModuleDeclaration(c Context) (ast.Node, error) {
 	ident, err := c.Expect(token.String)
 	if err != nil {
@@ -385,7 +393,7 @@ func ParseModuleDeclaration(c Context) (ast.Node, error) {
 		if brace, _ := c.Current(); brace.Literal == "}" {
 			break
 		}
-		n, err := ParseTopModuleStatement(c)
+		n, err := ParseTopStatement(c)
 		if err != nil {
 			return nil, err
 		}
@@ -400,7 +408,9 @@ func ParseModuleDeclaration(c Context) (ast.Node, error) {
 	}, nil
 }
 
-func ParseTopModuleStatement(c Context) (ast.Node, error) {
+// ParseTopStatement parses the top statements.
+// It can be a function, variable, constant or module.
+func ParseTopStatement(c Context) (ast.Node, error) {
 	t, err := c.Current()
 	if err != nil {
 		return nil, err
