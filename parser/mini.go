@@ -188,7 +188,7 @@ func ParseValue(c Context, declared, linked bool) (ast.Node, error) {
 	case t.Literal == "consteval":
 		_, _ = c.ExpectLiteral("consteval")
 		_, _ = c.ExpectLiteral("(")
-		expr, err := ParseValue(c, false, false)
+		expr, err := ParseValue(c, declared, linked)
 		if err != nil {
 			return nil, err
 		}
@@ -246,7 +246,10 @@ func ParseInstructionCall(c Context) (ast.Node, error) {
 		name   string
 	)
 
-	t, _ := c.Current()
+	t, err := c.Current()
+	if err != nil {
+		return nil, err
+	}
 	switch t.Kind {
 	case token.Separator:
 		_, _ = c.ExpectLiteral("[")
